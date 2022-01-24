@@ -27,7 +27,7 @@ fn get_users() -> Json<Vec<User>> {
     let connection = establish_connection();
     let result = users
         .load::<User>(&connection)
-        .expect("Could not find any user.");
+        .expect("SQL for getting all users failed.");
 
     Json(result)
 }
