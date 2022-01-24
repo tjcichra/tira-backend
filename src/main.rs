@@ -1,9 +1,11 @@
 use std::env;
 
-use diesel::{PgConnection, Connection, RunQueryDsl};
+use diesel::{PgConnection, Connection, RunQueryDsl, QueryDsl};
 
 use crate::models::User;
 use dotenv::dotenv;
+use rocket::serde::json::Json;
+use crate::diesel::ExpressionMethods;
 
 #[macro_use]
 extern crate rocket;
@@ -18,18 +20,28 @@ fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
-#[get("/")]
-fn index() -> String {
+#[get("/users")]
+fn get_users() -> Json<Vec<User>> {
     use crate::schema::users::dsl::*;
 
     let connection = establish_connection();
-    let result = users.first::<User>(&connection).expect("Could not find any user.");
+    let result = users.load::<User>(&connection).expect("Could not find any user.");
 
-    format!("{:?}", result)
+    Json(result)
+}
+
+#[get("/users/<user_id>")]
+fn get_user_by_id(user_id: i32) -> Json<User> {
+    use crate::schema::users::dsl::*;
+
+    let connection = establish_connection();
+    let result = users.filter(id.eq(user_id)).first::<User>(&connection).expect("Could not find any user.");
+
+    Json(result)
 }
 
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
-    rocket::build().mount("/", routes![index])
+    rocket::build().mount("/", routes![get_users, get_user_by_id])
 }
