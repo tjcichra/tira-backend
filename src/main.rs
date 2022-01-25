@@ -1,8 +1,5 @@
-use std::env;
+use service::{create_user, get_user_by_id, get_users};
 
-use diesel::{insert_into, Connection, PgConnection, QueryDsl, RunQueryDsl};
-
-use crate::diesel::ExpressionMethods;
 use crate::models::User;
 use dotenv::dotenv;
 use rocket::serde::json::Json;
@@ -14,58 +11,28 @@ extern crate diesel;
 
 pub mod models;
 pub mod schema;
-
-fn establish_connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
-}
+pub mod service;
 
 #[get("/users")]
-fn get_users() -> Json<Vec<User>> {
-    use crate::schema::users::dsl::*;
-
-    let connection = establish_connection();
-    let result = users
-        .load::<User>(&connection)
-        .expect("SQL for getting all users failed.");
-
-    Json(result)
+fn get_users_endpoint() -> Json<Vec<User>> {
+    Json(get_users())
 }
 
 #[get("/users/<user_id>")]
-fn get_user_by_id(user_id: i32) -> Json<User> {
-    use crate::schema::users::dsl::*;
-
-    let connection = establish_connection();
-    let result = users
-        .filter(id.eq(user_id))
-        .first::<User>(&connection)
-        .expect("Could not find any user.");
-
-    Json(result)
+fn get_user_by_id_endpoint(user_id: i32) -> Json<User> {
+    Json(get_user_by_id(user_id))
 }
 
 #[post("/users", data = "<user_json>")]
-fn create_user(user_json: Json<User>) {
-    use crate::schema::users::dsl::*;
-
-    let user = user_json.0;
-
-    let connection = establish_connection();
-    insert_into(users)
-        .values((
-            username.eq(user.username),
-            password.eq(user.password),
-            email_address.eq(user.email_address),
-            first_name.eq(user.first_name),
-            last_name.eq(user.last_name),
-        ))
-        .execute(&connection)
-        .expect("Error with inserting user");
+fn create_user_endpoint(user_json: Json<User>) {
+    create_user(user_json.0);
 }
 
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
-    rocket::build().mount("/", routes![get_users, get_user_by_id, create_user])
+    rocket::build().mount(
+        "/",
+        routes![get_users_endpoint, get_user_by_id_endpoint, create_user_endpoint],
+    )
 }
