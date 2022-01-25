@@ -1,8 +1,9 @@
-use rocket::serde::Serialize;
+use rocket::serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Debug, Serialize)]
+#[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct User {
+    #[serde(default)]
     pub id: i32,
     pub username: String,
     pub password: String,
