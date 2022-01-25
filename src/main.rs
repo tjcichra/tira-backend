@@ -2,7 +2,12 @@ use service::{create_user, get_user_by_id, get_users};
 
 use crate::models::User;
 use dotenv::dotenv;
-use rocket::serde::json::Json;
+use rocket::{
+    fairing::{Fairing, Info, Kind},
+    http::Header,
+    serde::json::Json,
+    Request, Response,
+};
 
 #[macro_use]
 extern crate rocket;
@@ -28,11 +33,38 @@ fn create_user_endpoint(user_json: Json<User>) {
     create_user(user_json.0);
 }
 
+pub struct CORS;
+
+#[rocket::async_trait]
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "Add CORS headers to responses",
+            kind: Kind::Response,
+        }
+    }
+
+    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, PATCH, OPTIONS",
+        ));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
-    rocket::build().mount(
+
+    rocket::build().attach(CORS).mount(
         "/",
-        routes![get_users_endpoint, get_user_by_id_endpoint, create_user_endpoint],
+        routes![
+            get_users_endpoint,
+            get_user_by_id_endpoint,
+            create_user_endpoint
+        ],
     )
 }
