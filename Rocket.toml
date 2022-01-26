@@ -1,0 +1,2 @@
+[global.databases]
+r2d2_url_thingy = { url = "postgres://user:test@localhost/tira" }
