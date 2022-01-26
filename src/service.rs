@@ -1,12 +1,30 @@
 use std::env;
 
-use diesel::{insert_into, Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{
+    delete, insert_into, Connection, ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl,
+};
 
 use crate::models::User;
 
 pub fn establish_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+}
+
+pub fn create_user(user: User) {
+    use crate::schema::users::dsl::*;
+
+    let connection = establish_connection();
+    insert_into(users)
+        .values((
+            username.eq(user.username),
+            password.eq(user.password),
+            email_address.eq(user.email_address),
+            first_name.eq(user.first_name),
+            last_name.eq(user.last_name),
+        ))
+        .execute(&connection)
+        .expect("Error with inserting user");
 }
 
 pub fn get_users() -> Vec<User> {
@@ -28,18 +46,20 @@ pub fn get_user_by_id(user_id: i32) -> User {
         .expect("Could not find any user.")
 }
 
-pub fn create_user(user: User) {
+pub fn delete_users() {
     use crate::schema::users::dsl::*;
 
     let connection = establish_connection();
-    insert_into(users)
-        .values((
-            username.eq(user.username),
-            password.eq(user.password),
-            email_address.eq(user.email_address),
-            first_name.eq(user.first_name),
-            last_name.eq(user.last_name),
-        ))
+    delete(users)
         .execute(&connection)
-        .expect("Error with inserting user");
+        .expect("Failed to delete users table");
+}
+
+pub fn delete_user_by_id(user_id: i32) {
+    use crate::schema::users::dsl::*;
+
+    let connection = establish_connection();
+    delete(users.filter(id.eq(user_id)))
+        .execute(&connection)
+        .expect("Failed to delete users table");
 }
