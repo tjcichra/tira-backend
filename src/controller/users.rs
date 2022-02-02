@@ -5,6 +5,7 @@ use crate::service::users::get_user_by_id;
 use crate::service::users::get_users;
 use crate::TiraDbConn;
 use crate::User;
+use rocket::response::status;
 use rocket::serde::json::Json;
 
 #[post("/users", data = "<user_json>")]
@@ -13,8 +14,12 @@ pub async fn create_user_endpoint(conn: TiraDbConn, user_json: Json<User>) {
 }
 
 #[get("/users")]
-pub async fn get_users_endpoint(conn: TiraDbConn) -> Json<Vec<User>> {
-    Json(get_users(conn).await)
+pub async fn get_users_endpoint(conn: TiraDbConn) -> Result<Json<Vec<User>>, Json<String>> {
+    let x = get_users(conn).await;
+    let x = x.map(|x| Json(x));
+    let x = x.map_err(|x| Json(x.to_string()));
+
+    x
 }
 
 #[get("/users/<user_id>")]

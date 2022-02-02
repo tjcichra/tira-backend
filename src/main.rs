@@ -1,3 +1,4 @@
+use controller::not_found;
 use diesel::PgConnection;
 use rocket_sync_db_pools::database;
 
@@ -25,14 +26,17 @@ pub struct TiraDbConn(PgConnection);
 fn rocket() -> _ {
     dotenv().ok();
 
-    rocket::build().attach(TiraDbConn::fairing()).mount(
-        "/",
-        routes![
-            create_user_endpoint,
-            get_users_endpoint,
-            get_user_by_id_endpoint,
-            delete_users_endpoint,
-            delete_user_by_id_endpoint
-        ]
-    )
+    rocket::build()
+        .attach(TiraDbConn::fairing())
+        .mount(
+            "/",
+            routes![
+                create_user_endpoint,
+                get_users_endpoint,
+                get_user_by_id_endpoint,
+                delete_users_endpoint,
+                delete_user_by_id_endpoint
+            ],
+        )
+        .register("/", catchers![not_found])
 }

@@ -1,4 +1,4 @@
-use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 use crate::{models::User, TiraDbConn};
 
@@ -20,15 +20,10 @@ pub async fn create_user(conn: TiraDbConn, user: User) {
     .await;
 }
 
-pub async fn get_users(conn: TiraDbConn) -> Vec<User> {
+pub async fn get_users(conn: TiraDbConn) -> QueryResult<Vec<User>> {
     use crate::schema::users::dsl::*;
 
-    conn.run(|c| {
-        users
-            .load::<User>(c)
-            .expect("SQL for getting all users failed.")
-    })
-    .await
+    conn.run(|c| users.load::<User>(c)).await
 }
 
 pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> User {
