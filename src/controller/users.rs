@@ -5,7 +5,6 @@ use crate::service::users::get_user_by_id;
 use crate::service::users::get_users;
 use crate::TiraDbConn;
 use crate::User;
-use rocket::response::status;
 use rocket::serde::json::Json;
 
 #[post("/users", data = "<user_json>")]

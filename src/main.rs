@@ -1,3 +1,7 @@
+use controller::categories::{
+    create_category_endpoint, delete_categories_endpoint, delete_category_by_id_endpoint,
+    get_categories_endpoint, get_category_by_id_endpoint,
+};
 use controller::not_found;
 use diesel::PgConnection;
 use rocket_sync_db_pools::database;
@@ -35,7 +39,12 @@ fn rocket() -> _ {
                 get_users_endpoint,
                 get_user_by_id_endpoint,
                 delete_users_endpoint,
-                delete_user_by_id_endpoint
+                delete_user_by_id_endpoint,
+                create_category_endpoint,
+                get_categories_endpoint,
+                get_category_by_id_endpoint,
+                delete_categories_endpoint,
+                delete_category_by_id_endpoint,
             ],
         )
         .register("/", catchers![not_found])
