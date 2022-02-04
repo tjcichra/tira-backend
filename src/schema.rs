@@ -16,6 +16,16 @@ table! {
 }
 
 table! {
+    comments (id) {
+        id -> Int4,
+        ticket_id -> Int4,
+        commenter_id -> Int4,
+        content -> Text,
+        commented -> Timestamp,
+    }
+}
+
+table! {
     tickets (id) {
         id -> Int4,
         category_id -> Nullable<Int4>,
@@ -41,12 +51,9 @@ table! {
 
 joinable!(assignments -> tickets (ticket_id));
 joinable!(assignments -> users (user_id));
+joinable!(comments -> tickets (ticket_id));
+joinable!(comments -> users (commenter_id));
 joinable!(tickets -> categories (category_id));
 joinable!(tickets -> users (reporter_id));
 
-allow_tables_to_appear_in_same_query!(
-    assignments,
-    categories,
-    tickets,
-    users,
-);
+allow_tables_to_appear_in_same_query!(assignments, categories, comments, tickets, users,);

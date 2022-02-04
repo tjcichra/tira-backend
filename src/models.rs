@@ -2,6 +2,7 @@ use std::time::SystemTime;
 
 use crate::schema::assignments;
 use crate::schema::categories;
+use crate::schema::comments;
 use crate::schema::tickets;
 use rocket::serde::{Deserialize, Serialize};
 
@@ -72,4 +73,22 @@ pub struct Assignment {
 #[serde(crate = "rocket::serde")]
 pub struct CreateAssignmentWithUserId {
     pub user_id: i32,
+}
+
+#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Comment {
+    pub id: i32,
+    pub ticket_id: i32,
+    pub commenter_id: i32,
+    pub content: String,
+    pub commented: SystemTime,
+}
+
+#[derive(Deserialize, Insertable)]
+#[table_name = "comments"]
+#[serde(crate = "rocket::serde")]
+pub struct CreateComment {
+    pub commenter_id: i32,
+    pub content: String,
 }

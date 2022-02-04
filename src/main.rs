@@ -7,8 +7,9 @@ use diesel::PgConnection;
 use rocket_sync_db_pools::database;
 
 use crate::controller::tickets::{
-    create_assignment_by_ticket_id_endpoint, create_ticket_endpoint, delete_ticket_by_id_endpoint, delete_tickets_endpoint,
-    get_assignments_by_ticket_id_endpoint, get_ticket_by_id_endpoint, get_tickets_endpoint,
+    create_assignment_by_ticket_id_endpoint, create_comment_endpoint, create_ticket_endpoint,
+    delete_ticket_by_id_endpoint, delete_tickets_endpoint, get_assignments_by_ticket_id_endpoint,
+    get_comments_by_ticket_id_endpoint, get_ticket_by_id_endpoint, get_tickets_endpoint,
 };
 use crate::controller::users::{
     create_user_endpoint, delete_user_by_id_endpoint, delete_users_endpoint,
@@ -54,6 +55,8 @@ fn rocket() -> _ {
                 get_assignments_by_ticket_id_endpoint,
                 get_tickets_endpoint,
                 get_ticket_by_id_endpoint,
+                create_comment_endpoint,
+                get_comments_by_ticket_id_endpoint,
                 delete_tickets_endpoint,
                 delete_ticket_by_id_endpoint,
             ],

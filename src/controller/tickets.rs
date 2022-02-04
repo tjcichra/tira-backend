@@ -1,7 +1,10 @@
-use crate::models::{CreateAssignmentWithUserId, CreateTicket, Ticket, Assignment};
+use crate::models::{
+    Assignment, Comment, CreateAssignmentWithUserId, CreateComment, CreateTicket, Ticket,
+};
 use crate::service::tickets::{
-    create_ticket, delete_ticket_by_id, delete_tickets,
-    get_ticket_by_id, get_tickets, create_assignment_by_ticket_id, get_assignments_by_ticket_id,
+    create_assignment_by_ticket_id, create_comment, create_ticket, delete_ticket_by_id,
+    delete_tickets, get_assignments_by_ticket_id, get_comments_by_ticket_id, get_ticket_by_id,
+    get_tickets,
 };
 use crate::TiraDbConn;
 use rocket::serde::json::Json;
@@ -20,12 +23,35 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     create_assignment_by_ticket_id(conn, ticket_id, create_assignment_json.0.user_id).await;
 }
 
+#[post("/tickets/<ticket_id>/comments", data = "<create_comment_json>")]
+pub async fn create_comment_endpoint(
+    conn: TiraDbConn,
+    ticket_id: i32,
+    create_comment_json: Json<CreateComment>,
+) {
+    create_comment(
+        conn,
+        ticket_id,
+        create_comment_json.0.commenter_id,
+        create_comment_json.0.content,
+    )
+    .await;
+}
+
 #[get("/tickets/<ticket_id>/assignments")]
 pub async fn get_assignments_by_ticket_id_endpoint(
     conn: TiraDbConn,
     ticket_id: i32,
 ) -> Json<Vec<Assignment>> {
     Json(get_assignments_by_ticket_id(conn, ticket_id).await)
+}
+
+#[get("/tickets/<ticket_id>/comments")]
+pub async fn get_comments_by_ticket_id_endpoint(
+    conn: TiraDbConn,
+    ticket_id: i32,
+) -> Json<Vec<Comment>> {
+    Json(get_comments_by_ticket_id(conn, ticket_id).await)
 }
 
 #[get("/tickets")]

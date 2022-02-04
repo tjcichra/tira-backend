@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
-    models::{CreateTicket, Ticket, Assignment},
+    models::{Assignment, Comment, CreateTicket, Ticket},
     TiraDbConn,
 };
 
@@ -35,6 +35,28 @@ pub async fn create_assignment_by_ticket_id(
             ))
             .execute(c)
             .expect("Error with inserting assignment")
+    })
+    .await;
+}
+
+pub async fn create_comment(
+    conn: TiraDbConn,
+    ticket_id_parameter: i32,
+    commenter_id_parameter: i32,
+    content_parameter: String,
+) {
+    use crate::schema::comments::dsl::*;
+
+    conn.run(move |c| {
+        insert_into(comments)
+            .values((
+                ticket_id.eq(ticket_id_parameter),
+                commenter_id.eq(commenter_id_parameter),
+                content.eq(content_parameter),
+                commented.eq(SystemTime::now()),
+            ))
+            .execute(c)
+            .expect("Error with inserting comment")
     })
     .await;
 }
@@ -73,6 +95,18 @@ pub async fn get_assignments_by_ticket_id(
             .filter(ticket_id.eq(ticket_id_parameter))
             .load::<Assignment>(c)
             .expect("Could not find any assignments.")
+    })
+    .await
+}
+
+pub async fn get_comments_by_ticket_id(conn: TiraDbConn, ticket_id_parameter: i32) -> Vec<Comment> {
+    use crate::schema::comments::dsl::*;
+
+    conn.run(move |c| {
+        comments
+            .filter(ticket_id.eq(ticket_id_parameter))
+            .load::<Comment>(c)
+            .expect("Error loading comments.")
     })
     .await
 }
