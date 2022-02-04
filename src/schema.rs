@@ -8,6 +8,19 @@ table! {
 }
 
 table! {
+    tickets (id) {
+        id -> Int4,
+        category_id -> Nullable<Int4>,
+        subject -> Text,
+        description -> Nullable<Text>,
+        status -> Text,
+        priority -> Text,
+        created -> Timestamp,
+        reporter_id -> Int4,
+    }
+}
+
+table! {
     users (id) {
         id -> Int4,
         username -> Text,
@@ -18,4 +31,11 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(categories, users,);
+joinable!(tickets -> categories (category_id));
+joinable!(tickets -> users (reporter_id));
+
+allow_tables_to_appear_in_same_query!(
+    categories,
+    tickets,
+    users,
+);

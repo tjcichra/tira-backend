@@ -1,4 +1,5 @@
 pub mod categories;
+pub mod tickets;
 pub mod users;
 
 use rocket::response::content::Custom;

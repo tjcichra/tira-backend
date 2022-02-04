@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use crate::schema::categories;
+use crate::schema::tickets;
 use rocket::serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -30,4 +31,29 @@ pub struct Category {
 pub struct CreateCategory {
     pub name: String,
     pub description: Option<String>,
+}
+
+#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Ticket {
+    pub id: i32,
+    pub category_id: Option<i32>,
+    pub subject: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub priority: String,
+    pub created: SystemTime,
+    pub reporter_id: i32,
+}
+
+#[derive(Deserialize, Insertable)]
+#[table_name = "tickets"]
+#[serde(crate = "rocket::serde")]
+pub struct CreateTicket {
+    pub category_id: Option<i32>,
+    pub subject: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub priority: String,
+    pub reporter_id: i32,
 }
