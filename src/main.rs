@@ -6,13 +6,13 @@ use controller::not_found;
 use diesel::PgConnection;
 use rocket_sync_db_pools::database;
 
+use crate::controller::tickets::{
+    create_assignment_by_ticket_id_endpoint, create_ticket_endpoint, delete_ticket_by_id_endpoint, delete_tickets_endpoint,
+    get_assignments_by_ticket_id_endpoint, get_ticket_by_id_endpoint, get_tickets_endpoint,
+};
 use crate::controller::users::{
     create_user_endpoint, delete_user_by_id_endpoint, delete_users_endpoint,
     get_user_by_id_endpoint, get_users_endpoint,
-};
-use crate::controller::tickets::{
-    create_ticket_endpoint, delete_ticket_by_id_endpoint, delete_tickets_endpoint,
-    get_ticket_by_id_endpoint, get_tickets_endpoint,
 };
 use crate::models::User;
 use dotenv::dotenv;
@@ -49,7 +49,9 @@ fn rocket() -> _ {
                 get_category_by_id_endpoint,
                 delete_categories_endpoint,
                 delete_category_by_id_endpoint,
+                create_assignment_by_ticket_id_endpoint,
                 create_ticket_endpoint,
+                get_assignments_by_ticket_id_endpoint,
                 get_tickets_endpoint,
                 get_ticket_by_id_endpoint,
                 delete_tickets_endpoint,

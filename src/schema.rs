@@ -1,4 +1,12 @@
 table! {
+    assignments (ticket_id, user_id) {
+        ticket_id -> Int4,
+        user_id -> Int4,
+        assigned -> Timestamp,
+    }
+}
+
+table! {
     categories (id) {
         id -> Int4,
         name -> Text,
@@ -31,10 +39,13 @@ table! {
     }
 }
 
+joinable!(assignments -> tickets (ticket_id));
+joinable!(assignments -> users (user_id));
 joinable!(tickets -> categories (category_id));
 joinable!(tickets -> users (reporter_id));
 
 allow_tables_to_appear_in_same_query!(
+    assignments,
     categories,
     tickets,
     users,

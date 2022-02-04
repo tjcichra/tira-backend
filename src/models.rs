@@ -1,5 +1,6 @@
 use std::time::SystemTime;
 
+use crate::schema::assignments;
 use crate::schema::categories;
 use crate::schema::tickets;
 use rocket::serde::{Deserialize, Serialize};
@@ -56,4 +57,19 @@ pub struct CreateTicket {
     pub status: String,
     pub priority: String,
     pub reporter_id: i32,
+}
+
+#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Assignment {
+    pub ticket_id: i32,
+    pub user_id: i32,
+    pub assigned: SystemTime,
+}
+
+#[derive(Deserialize, Insertable)]
+#[table_name = "assignments"]
+#[serde(crate = "rocket::serde")]
+pub struct CreateAssignmentWithUserId {
+    pub user_id: i32,
 }

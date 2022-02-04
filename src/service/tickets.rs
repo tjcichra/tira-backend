@@ -3,7 +3,7 @@ use std::time::SystemTime;
 use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
-    models::{CreateTicket, Ticket},
+    models::{CreateTicket, Ticket, Assignment},
     TiraDbConn,
 };
 
@@ -15,6 +15,26 @@ pub async fn create_ticket(conn: TiraDbConn, ticket: CreateTicket) {
             .values((&ticket, created.eq(SystemTime::now())))
             .execute(c)
             .expect("Error with inserting ticket")
+    })
+    .await;
+}
+
+pub async fn create_assignment_by_ticket_id(
+    conn: TiraDbConn,
+    ticket_id_parameter: i32,
+    user_id_parameter: i32,
+) {
+    use crate::schema::assignments::dsl::*;
+
+    conn.run(move |c| {
+        insert_into(assignments)
+            .values((
+                ticket_id.eq(ticket_id_parameter),
+                user_id.eq(user_id_parameter),
+                assigned.eq(SystemTime::now()),
+            ))
+            .execute(c)
+            .expect("Error with inserting assignment")
     })
     .await;
 }
@@ -38,6 +58,21 @@ pub async fn get_ticket_by_id(conn: TiraDbConn, ticket_id: i32) -> Ticket {
             .filter(id.eq(ticket_id))
             .first::<Ticket>(c)
             .expect("Could not find any ticket.")
+    })
+    .await
+}
+
+pub async fn get_assignments_by_ticket_id(
+    conn: TiraDbConn,
+    ticket_id_parameter: i32,
+) -> Vec<Assignment> {
+    use crate::schema::assignments::dsl::*;
+
+    conn.run(move |c| {
+        assignments
+            .filter(ticket_id.eq(ticket_id_parameter))
+            .load::<Assignment>(c)
+            .expect("Could not find any assignments.")
     })
     .await
 }
