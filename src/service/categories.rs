@@ -19,6 +19,28 @@ pub async fn create_category(conn: TiraDbConn, category: CreateCategory) {
     .await;
 }
 
+pub async fn delete_categories(conn: TiraDbConn) {
+    use crate::schema::categories::dsl::*;
+
+    conn.run(|c| {
+        diesel::delete(categories)
+            .execute(c)
+            .expect("Failed to delete categories table");
+    })
+    .await;
+}
+
+pub async fn delete_category_by_id(conn: TiraDbConn, category_id: i32) {
+    use crate::schema::categories::dsl::*;
+
+    conn.run(move |c| {
+        diesel::delete(categories.filter(id.eq(category_id)))
+            .execute(c)
+            .expect("Failed to delete category by id")
+    })
+    .await;
+}
+
 pub async fn get_categories(conn: TiraDbConn) -> Vec<Category> {
     use crate::schema::categories::dsl::*;
 
@@ -40,26 +62,4 @@ pub async fn get_category_by_id(conn: TiraDbConn, user_id: i32) -> Category {
             .expect("Could not find any category.")
     })
     .await
-}
-
-pub async fn delete_categories(conn: TiraDbConn) {
-    use crate::schema::categories::dsl::*;
-
-    conn.run(|c| {
-        diesel::delete(categories)
-            .execute(c)
-            .expect("Failed to delete categories table");
-    })
-    .await;
-}
-
-pub async fn delete_category_by_id(conn: TiraDbConn, category_id: i32) {
-    use crate::schema::categories::dsl::*;
-
-    conn.run(move |c| {
-        diesel::delete(categories.filter(id.eq(category_id)))
-            .execute(c)
-            .expect("Failed to delete category by id")
-    })
-    .await;
 }

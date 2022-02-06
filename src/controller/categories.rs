@@ -3,6 +3,16 @@ use crate::service::categories;
 use crate::TiraDbConn;
 use rocket::serde::json::Json;
 
+#[delete("/categories")]
+pub async fn delete_categories_endpoint(conn: TiraDbConn) {
+    categories::delete_categories(conn).await;
+}
+
+#[delete("/categories/<category_id>")]
+pub async fn delete_category_by_id_endpoint(conn: TiraDbConn, category_id: i32) {
+    categories::delete_category_by_id(conn, category_id).await;
+}
+
 #[post("/categories", data = "<create_category_json>")]
 pub async fn create_category_endpoint(
     conn: TiraDbConn,
@@ -19,14 +29,4 @@ pub async fn get_categories_endpoint(conn: TiraDbConn) -> Json<Vec<Category>> {
 #[get("/categories/<category_id>")]
 pub async fn get_category_by_id_endpoint(conn: TiraDbConn, category_id: i32) -> Json<Category> {
     Json(categories::get_category_by_id(conn, category_id).await)
-}
-
-#[delete("/categories")]
-pub async fn delete_categories_endpoint(conn: TiraDbConn) {
-    categories::delete_categories(conn).await;
-}
-
-#[delete("/categories/<category_id>")]
-pub async fn delete_category_by_id_endpoint(conn: TiraDbConn, category_id: i32) {
-    categories::delete_category_by_id(conn, category_id).await;
 }

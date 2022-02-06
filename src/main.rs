@@ -2,8 +2,7 @@ use controller::categories;
 use diesel::PgConnection;
 use rocket_sync_db_pools::database;
 
-use crate::controller::tickets;
-use crate::controller::users;
+use crate::controller::{tickets, users};
 use crate::models::User;
 use dotenv::dotenv;
 
@@ -29,11 +28,6 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
-                users::create_user_endpoint,
-                users::delete_user_by_id_endpoint,
-                users::delete_users_endpoint,
-                users::get_user_by_id_endpoint,
-                users::get_users_endpoint,
                 categories::create_category_endpoint,
                 categories::delete_categories_endpoint,
                 categories::delete_category_by_id_endpoint,
@@ -48,6 +42,11 @@ fn rocket() -> _ {
                 tickets::get_comments_by_ticket_id_endpoint,
                 tickets::get_ticket_by_id_endpoint,
                 tickets::get_tickets_endpoint,
+                users::create_user_endpoint,
+                users::delete_user_by_id_endpoint,
+                users::delete_users_endpoint,
+                users::get_user_by_id_endpoint,
+                users::get_users_endpoint,
             ],
         )
         .register("/", catchers![controller::not_found])

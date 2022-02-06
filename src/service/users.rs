@@ -20,10 +20,26 @@ pub async fn create_user(conn: TiraDbConn, user: User) {
     .await;
 }
 
-pub async fn get_users(conn: TiraDbConn) -> QueryResult<Vec<User>> {
+pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) {
     use crate::schema::users::dsl::*;
 
-    conn.run(|c| users.load::<User>(c)).await
+    conn.run(move |c| {
+        diesel::delete(users.filter(id.eq(user_id)))
+            .execute(c)
+            .expect("Failed to delete users table")
+    })
+    .await;
+}
+
+pub async fn delete_users(conn: TiraDbConn) {
+    use crate::schema::users::dsl::*;
+
+    conn.run(|c| {
+        diesel::delete(users)
+            .execute(c)
+            .expect("Failed to delete users table");
+    })
+    .await;
 }
 
 pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> User {
@@ -38,24 +54,8 @@ pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> User {
     .await
 }
 
-pub async fn delete_users(conn: TiraDbConn) {
+pub async fn get_users(conn: TiraDbConn) -> QueryResult<Vec<User>> {
     use crate::schema::users::dsl::*;
 
-    conn.run(|c| {
-        diesel::delete(users)
-            .execute(c)
-            .expect("Failed to delete users table");
-    })
-    .await;
-}
-
-pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) {
-    use crate::schema::users::dsl::*;
-
-    conn.run(move |c| {
-        diesel::delete(users.filter(id.eq(user_id)))
-            .execute(c)
-            .expect("Failed to delete users table")
-    })
-    .await;
+    conn.run(|c| users.load::<User>(c)).await
 }

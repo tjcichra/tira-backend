@@ -5,11 +5,6 @@ use crate::service::tickets;
 use crate::TiraDbConn;
 use rocket::serde::json::Json;
 
-#[post("/tickets", data = "<create_ticket_json>")]
-pub async fn create_ticket_endpoint(conn: TiraDbConn, create_ticket_json: Json<CreateTicket>) {
-    tickets::create_ticket(conn, create_ticket_json.0).await;
-}
-
 #[post("/tickets/<ticket_id>/assignments", data = "<create_assignment_json>")]
 pub async fn create_assignment_by_ticket_id_endpoint(
     conn: TiraDbConn,
@@ -35,6 +30,21 @@ pub async fn create_comment_endpoint(
     .await;
 }
 
+#[post("/tickets", data = "<create_ticket_json>")]
+pub async fn create_ticket_endpoint(conn: TiraDbConn, create_ticket_json: Json<CreateTicket>) {
+    tickets::create_ticket(conn, create_ticket_json.0).await;
+}
+
+#[delete("/tickets/<ticket_id>")]
+pub async fn delete_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i32) {
+    tickets::delete_ticket_by_id(conn, ticket_id).await;
+}
+
+#[delete("/tickets")]
+pub async fn delete_tickets_endpoint(conn: TiraDbConn) {
+    tickets::delete_tickets(conn).await;
+}
+
 #[get("/tickets/<ticket_id>/assignments")]
 pub async fn get_assignments_by_ticket_id_endpoint(
     conn: TiraDbConn,
@@ -51,22 +61,12 @@ pub async fn get_comments_by_ticket_id_endpoint(
     Json(tickets::get_comments_by_ticket_id(conn, ticket_id).await)
 }
 
-#[get("/tickets")]
-pub async fn get_tickets_endpoint(conn: TiraDbConn) -> Json<Vec<Ticket>> {
-    Json(tickets::get_tickets(conn).await)
-}
-
 #[get("/tickets/<ticket_id>")]
 pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i32) -> Json<Ticket> {
     Json(tickets::get_ticket_by_id(conn, ticket_id).await)
 }
 
-#[delete("/tickets")]
-pub async fn delete_tickets_endpoint(conn: TiraDbConn) {
-    tickets::delete_tickets(conn).await;
-}
-
-#[delete("/tickets/<ticket_id>")]
-pub async fn delete_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i32) {
-    tickets::delete_ticket_by_id(conn, ticket_id).await;
+#[get("/tickets")]
+pub async fn get_tickets_endpoint(conn: TiraDbConn) -> Json<Vec<Ticket>> {
+    Json(tickets::get_tickets(conn).await)
 }
