@@ -16,7 +16,8 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     ticket_id: i32,
     create_assignment_json: Json<CreateAssignmentWithUserId>,
 ) {
-    tickets::create_assignment_by_ticket_id(conn, ticket_id, create_assignment_json.0.user_id).await;
+    tickets::create_assignment_by_ticket_id(conn, ticket_id, create_assignment_json.0.user_id)
+        .await;
 }
 
 #[post("/tickets/<ticket_id>/comments", data = "<create_comment_json>")]

@@ -56,10 +56,4 @@ joinable!(comments -> users (commenter_id));
 joinable!(tickets -> categories (category_id));
 joinable!(tickets -> users (reporter_id));
 
-allow_tables_to_appear_in_same_query!(
-    assignments,
-    categories,
-    comments,
-    tickets,
-    users,
-);
+allow_tables_to_appear_in_same_query!(assignments, categories, comments, tickets, users,);

@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use diesel::{ ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     models::{Assignment, Comment, CreateTicket, Ticket},
