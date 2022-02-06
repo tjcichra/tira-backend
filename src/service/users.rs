@@ -1,4 +1,4 @@
-use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 use crate::{models::User, TiraDbConn};
 
@@ -6,7 +6,7 @@ pub async fn create_user(conn: TiraDbConn, user: User) {
     use crate::schema::users::dsl::*;
 
     conn.run(|c| {
-        insert_into(users)
+        diesel::insert_into(users)
             .values((
                 username.eq(user.username),
                 password.eq(user.password),
@@ -42,7 +42,7 @@ pub async fn delete_users(conn: TiraDbConn) {
     use crate::schema::users::dsl::*;
 
     conn.run(|c| {
-        delete(users)
+        diesel::delete(users)
             .execute(c)
             .expect("Failed to delete users table");
     })
@@ -53,7 +53,7 @@ pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| {
-        delete(users.filter(id.eq(user_id)))
+        diesel::delete(users.filter(id.eq(user_id)))
             .execute(c)
             .expect("Failed to delete users table")
     })

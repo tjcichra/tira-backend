@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     models::{Assignment, Comment, CreateTicket, Ticket},
@@ -11,7 +11,7 @@ pub async fn create_ticket(conn: TiraDbConn, ticket: CreateTicket) {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
-        insert_into(tickets)
+        diesel::insert_into(tickets)
             .values((&ticket, created.eq(SystemTime::now())))
             .execute(c)
             .expect("Error with inserting ticket")
@@ -27,7 +27,7 @@ pub async fn create_assignment_by_ticket_id(
     use crate::schema::assignments::dsl::*;
 
     conn.run(move |c| {
-        insert_into(assignments)
+        diesel::insert_into(assignments)
             .values((
                 ticket_id.eq(ticket_id_parameter),
                 user_id.eq(user_id_parameter),
@@ -48,7 +48,7 @@ pub async fn create_comment(
     use crate::schema::comments::dsl::*;
 
     conn.run(move |c| {
-        insert_into(comments)
+        diesel::insert_into(comments)
             .values((
                 ticket_id.eq(ticket_id_parameter),
                 commenter_id.eq(commenter_id_parameter),
@@ -115,7 +115,7 @@ pub async fn delete_tickets(conn: TiraDbConn) {
     use crate::schema::tickets::dsl::*;
 
     conn.run(|c| {
-        delete(tickets)
+        diesel::delete(tickets)
             .execute(c)
             .expect("Failed to delete tickets table");
     })
@@ -126,7 +126,7 @@ pub async fn delete_ticket_by_id(conn: TiraDbConn, ticket_id: i32) {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
-        delete(tickets.filter(id.eq(ticket_id)))
+        diesel::delete(tickets.filter(id.eq(ticket_id)))
             .execute(c)
             .expect("Failed to delete ticket by id")
     })

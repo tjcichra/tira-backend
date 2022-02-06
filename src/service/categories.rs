@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use diesel::{delete, insert_into, ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     models::{Category, CreateCategory},
@@ -11,7 +11,7 @@ pub async fn create_category(conn: TiraDbConn, category: CreateCategory) {
     use crate::schema::categories::dsl::*;
 
     conn.run(move |c| {
-        insert_into(categories)
+        diesel::insert_into(categories)
             .values((&category, created.eq(SystemTime::now())))
             .execute(c)
             .expect("Error with inserting category")
@@ -46,7 +46,7 @@ pub async fn delete_categories(conn: TiraDbConn) {
     use crate::schema::categories::dsl::*;
 
     conn.run(|c| {
-        delete(categories)
+        diesel::delete(categories)
             .execute(c)
             .expect("Failed to delete categories table");
     })
@@ -57,7 +57,7 @@ pub async fn delete_category_by_id(conn: TiraDbConn, category_id: i32) {
     use crate::schema::categories::dsl::*;
 
     conn.run(move |c| {
-        delete(categories.filter(id.eq(category_id)))
+        diesel::delete(categories.filter(id.eq(category_id)))
             .execute(c)
             .expect("Failed to delete category by id")
     })

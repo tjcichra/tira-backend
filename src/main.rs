@@ -1,20 +1,9 @@
-use controller::categories::{
-    create_category_endpoint, delete_categories_endpoint, delete_category_by_id_endpoint,
-    get_categories_endpoint, get_category_by_id_endpoint,
-};
-use controller::not_found;
+use controller::categories;
 use diesel::PgConnection;
 use rocket_sync_db_pools::database;
 
-use crate::controller::tickets::{
-    create_assignment_by_ticket_id_endpoint, create_comment_endpoint, create_ticket_endpoint,
-    delete_ticket_by_id_endpoint, delete_tickets_endpoint, get_assignments_by_ticket_id_endpoint,
-    get_comments_by_ticket_id_endpoint, get_ticket_by_id_endpoint, get_tickets_endpoint,
-};
-use crate::controller::users::{
-    create_user_endpoint, delete_user_by_id_endpoint, delete_users_endpoint,
-    get_user_by_id_endpoint, get_users_endpoint,
-};
+use crate::controller::tickets;
+use crate::controller::users;
 use crate::models::User;
 use dotenv::dotenv;
 
@@ -40,26 +29,26 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
-                create_user_endpoint,
-                get_users_endpoint,
-                get_user_by_id_endpoint,
-                delete_users_endpoint,
-                delete_user_by_id_endpoint,
-                create_category_endpoint,
-                get_categories_endpoint,
-                get_category_by_id_endpoint,
-                delete_categories_endpoint,
-                delete_category_by_id_endpoint,
-                create_assignment_by_ticket_id_endpoint,
-                create_ticket_endpoint,
-                get_assignments_by_ticket_id_endpoint,
-                get_tickets_endpoint,
-                get_ticket_by_id_endpoint,
-                create_comment_endpoint,
-                get_comments_by_ticket_id_endpoint,
-                delete_tickets_endpoint,
-                delete_ticket_by_id_endpoint,
+                users::create_user_endpoint,
+                users::delete_user_by_id_endpoint,
+                users::delete_users_endpoint,
+                users::get_user_by_id_endpoint,
+                users::get_users_endpoint,
+                categories::create_category_endpoint,
+                categories::delete_categories_endpoint,
+                categories::delete_category_by_id_endpoint,
+                categories::get_categories_endpoint,
+                categories::get_category_by_id_endpoint,
+                tickets::create_assignment_by_ticket_id_endpoint,
+                tickets::create_comment_endpoint,
+                tickets::create_ticket_endpoint,
+                tickets::delete_ticket_by_id_endpoint,
+                tickets::delete_tickets_endpoint,
+                tickets::get_assignments_by_ticket_id_endpoint,
+                tickets::get_comments_by_ticket_id_endpoint,
+                tickets::get_ticket_by_id_endpoint,
+                tickets::get_tickets_endpoint,
             ],
         )
-        .register("/", catchers![not_found])
+        .register("/", catchers![controller::not_found])
 }
