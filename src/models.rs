@@ -1,9 +1,9 @@
-use std::time::SystemTime;
-
 use crate::schema::assignments;
 use crate::schema::categories;
 use crate::schema::comments;
+use crate::schema::sessions;
 use crate::schema::tickets;
+use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -24,7 +24,7 @@ pub struct Category {
     pub id: i32,
     pub name: String,
     pub description: Option<String>,
-    pub created: SystemTime,
+    pub created: NaiveDateTime,
 }
 
 #[derive(Deserialize, Insertable)]
@@ -44,7 +44,7 @@ pub struct Ticket {
     pub description: Option<String>,
     pub status: String,
     pub priority: String,
-    pub created: SystemTime,
+    pub created: NaiveDateTime,
     pub reporter_id: i32,
 }
 
@@ -56,8 +56,7 @@ pub struct CreateTicket {
     pub subject: String,
     pub description: Option<String>,
     pub status: String,
-    pub priority: String,
-    pub reporter_id: i32,
+    pub priority: String
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -65,7 +64,7 @@ pub struct CreateTicket {
 pub struct Assignment {
     pub ticket_id: i32,
     pub user_id: i32,
-    pub assigned: SystemTime,
+    pub assigned: NaiveDateTime,
 }
 
 #[derive(Deserialize, Insertable)]
@@ -82,7 +81,7 @@ pub struct Comment {
     pub ticket_id: i32,
     pub commenter_id: i32,
     pub content: String,
-    pub commented: SystemTime,
+    pub commented: NaiveDateTime,
 }
 
 #[derive(Deserialize, Insertable)]
@@ -91,4 +90,13 @@ pub struct Comment {
 pub struct CreateComment {
     pub commenter_id: i32,
     pub content: String,
+}
+
+#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Session {
+    pub uuid: String,
+    pub user_id: i32,
+    pub created: NaiveDateTime,
+    pub expiration: NaiveDateTime,
 }

@@ -26,6 +26,15 @@ table! {
 }
 
 table! {
+    sessions (uuid) {
+        uuid -> Text,
+        user_id -> Int4,
+        created -> Timestamp,
+        expiration -> Timestamp,
+    }
+}
+
+table! {
     tickets (id) {
         id -> Int4,
         category_id -> Nullable<Int4>,
@@ -53,6 +62,7 @@ joinable!(assignments -> tickets (ticket_id));
 joinable!(assignments -> users (user_id));
 joinable!(comments -> tickets (ticket_id));
 joinable!(comments -> users (commenter_id));
+joinable!(sessions -> users (user_id));
 joinable!(tickets -> categories (category_id));
 joinable!(tickets -> users (reporter_id));
 
@@ -60,6 +70,7 @@ allow_tables_to_appear_in_same_query!(
     assignments,
     categories,
     comments,
+    sessions,
     tickets,
     users,
 );

@@ -33,6 +33,7 @@ fn rocket() -> _ {
                 categories::delete_category_by_id_endpoint,
                 categories::get_categories_endpoint,
                 categories::get_category_by_id_endpoint,
+                controller::login_endpoint,
                 tickets::create_assignment_by_ticket_id_endpoint,
                 tickets::create_comment_endpoint,
                 tickets::create_ticket_endpoint,

@@ -2,14 +2,20 @@ use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, result::Erro
 
 use crate::{models::User, TiraDbConn};
 
+use crypto::{sha2::Sha256, digest::Digest};
+
 pub async fn create_user(conn: TiraDbConn, user: User) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
+
+    let mut hasher = Sha256::new();
+    hasher.input_str(&user.password);
+    let hex = hasher.result_str();
 
     conn.run(|c| {
         diesel::insert_into(users)
             .values((
                 username.eq(user.username),
-                password.eq(user.password),
+                password.eq(hex),
                 email_address.eq(user.email_address),
                 first_name.eq(user.first_name),
                 last_name.eq(user.last_name),

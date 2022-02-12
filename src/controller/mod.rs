@@ -3,12 +3,15 @@ pub mod tickets;
 pub mod users;
 
 use diesel::QueryResult;
+use rocket::http::{CookieJar, Cookie};
 use rocket::response::content::Custom;
 use rocket::{
     http::ContentType,
-    serde::{json::Json, Serialize},
+    serde::{Deserialize, json::Json, Serialize},
     Request,
 };
+
+use crate::{service, TiraDbConn};
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -17,6 +20,20 @@ pub struct ErrorResponse {
     #[serde(rename = "type")]
     type_: String,
     status: i32,
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Login {
+    username: String,
+    password: String
+}
+
+#[post("/login", data = "<login_info>")]
+pub async fn login_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, login_info: Json<Login>) {
+    let login_info = login_info.0;
+    let uuid = service::login(conn, login_info.username, login_info.password).await.unwrap();
+    cookies.add(Cookie::new("tirauth", uuid));
 }
 
 #[catch(404)]

@@ -3,6 +3,7 @@ use crate::models::{
 };
 use crate::service::tickets;
 use crate::TiraDbConn;
+use rocket::http::CookieJar;
 use rocket::serde::json::Json;
 
 #[post("/tickets/<ticket_id>/assignments", data = "<create_assignment_json>")]
@@ -31,8 +32,8 @@ pub async fn create_comment_endpoint(
 }
 
 #[post("/tickets", data = "<create_ticket_json>")]
-pub async fn create_ticket_endpoint(conn: TiraDbConn, create_ticket_json: Json<CreateTicket>) {
-    tickets::create_ticket(conn, create_ticket_json.0).await;
+pub async fn create_ticket_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, create_ticket_json: Json<CreateTicket>) {
+    tickets::create_ticket(conn, cookies.get("tirauth").unwrap().value().to_owned(), create_ticket_json.0).await;
 }
 
 #[delete("/tickets/<ticket_id>")]
