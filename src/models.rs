@@ -56,7 +56,7 @@ pub struct CreateTicket {
     pub subject: String,
     pub description: Option<String>,
     pub status: String,
-    pub priority: String
+    pub priority: String,
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]

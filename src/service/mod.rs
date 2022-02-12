@@ -1,16 +1,20 @@
-use std::time::{SystemTime, Duration};
+use std::time::{Duration, SystemTime};
 
-use crypto::{sha2::Sha256, digest::Digest};
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, QueryResult};
+use crypto::{digest::Digest, sha2::Sha256};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 use uuid::Uuid;
 
-use crate::{TiraDbConn, models::User};
+use crate::{models::User, TiraDbConn};
 
 pub mod categories;
 pub mod tickets;
 pub mod users;
 
-pub async fn login(conn: TiraDbConn, username_input: String, password_input: String) -> QueryResult<String> {
+pub async fn login(
+    conn: TiraDbConn,
+    username_input: String,
+    password_input: String,
+) -> QueryResult<String> {
     let user = {
         use crate::schema::users::dsl::*;
 

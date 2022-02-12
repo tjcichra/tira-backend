@@ -32,8 +32,17 @@ pub async fn create_comment_endpoint(
 }
 
 #[post("/tickets", data = "<create_ticket_json>")]
-pub async fn create_ticket_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, create_ticket_json: Json<CreateTicket>) {
-    tickets::create_ticket(conn, cookies.get("tirauth").unwrap().value().to_owned(), create_ticket_json.0).await;
+pub async fn create_ticket_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+    create_ticket_json: Json<CreateTicket>,
+) {
+    tickets::create_ticket(
+        conn,
+        cookies.get("tirauth").unwrap().value().to_owned(),
+        create_ticket_json.0,
+    )
+    .await;
 }
 
 #[delete("/tickets/<ticket_id>")]

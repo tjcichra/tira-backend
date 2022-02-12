@@ -1,8 +1,8 @@
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, result::Error};
+use diesel::{result::Error, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 use crate::{models::User, TiraDbConn};
 
-use crypto::{sha2::Sha256, digest::Digest};
+use crypto::{digest::Digest, sha2::Sha256};
 
 pub async fn create_user(conn: TiraDbConn, user: User) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
@@ -28,36 +28,25 @@ pub async fn create_user(conn: TiraDbConn, user: User) -> QueryResult<usize> {
 pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
-    conn.run(move |c| {
-        diesel::delete(users.filter(id.eq(user_id)))
-            .execute(c)
-    })
-    .await
+    conn.run(move |c| diesel::delete(users.filter(id.eq(user_id))).execute(c))
+        .await
 }
 
 pub async fn delete_users(conn: TiraDbConn) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
-    match conn.run(|c| {
-        diesel::delete(users)
-            .execute(c)
-    })
-    .await {
+    match conn.run(|c| diesel::delete(users).execute(c)).await {
         Ok(1) => Ok(1),
         Ok(n) => Err(Error::NotFound),
-        x => x
+        x => x,
     }
 }
 
 pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<User> {
     use crate::schema::users::dsl::*;
 
-    conn.run(move |c| {
-        users
-            .filter(id.eq(user_id))
-            .first::<User>(c)
-    })
-    .await
+    conn.run(move |c| users.filter(id.eq(user_id)).first::<User>(c))
+        .await
 }
 
 pub async fn get_users(conn: TiraDbConn) -> QueryResult<Vec<User>> {

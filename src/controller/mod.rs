@@ -3,11 +3,11 @@ pub mod tickets;
 pub mod users;
 
 use diesel::QueryResult;
-use rocket::http::{CookieJar, Cookie};
+use rocket::http::{Cookie, CookieJar};
 use rocket::response::content::Custom;
 use rocket::{
     http::ContentType,
-    serde::{Deserialize, json::Json, Serialize},
+    serde::{json::Json, Deserialize, Serialize},
     Request,
 };
 
@@ -26,13 +26,15 @@ pub struct ErrorResponse {
 #[serde(crate = "rocket::serde")]
 pub struct Login {
     username: String,
-    password: String
+    password: String,
 }
 
 #[post("/login", data = "<login_info>")]
 pub async fn login_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, login_info: Json<Login>) {
     let login_info = login_info.0;
-    let uuid = service::login(conn, login_info.username, login_info.password).await.unwrap();
+    let uuid = service::login(conn, login_info.username, login_info.password)
+        .await
+        .unwrap();
     cookies.add(Cookie::new("tirauth", uuid));
 }
 
@@ -53,5 +55,7 @@ pub fn not_found(req: &Request) -> Custom<Json<ErrorResponse>> {
 pub type TiraResponse<T> = Result<Json<T>, Json<String>>;
 
 fn standardize_response<T>(result: QueryResult<T>) -> TiraResponse<T> {
-    result.map(|value| Json(value)).map_err(|err| Json(err.to_string()))
+    result
+        .map(|value| Json(value))
+        .map_err(|err| Json(err.to_string()))
 }

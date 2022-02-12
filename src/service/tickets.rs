@@ -4,7 +4,7 @@ use chrono::Utc;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
-    models::{Assignment, Comment, CreateTicket, Ticket, Session},
+    models::{Assignment, Comment, CreateTicket, Session, Ticket},
     TiraDbConn,
 };
 
@@ -54,15 +54,16 @@ pub async fn create_ticket(conn: TiraDbConn, session_uuid: String, ticket: Creat
     let the_reporter_id = {
         use crate::schema::sessions::dsl::*;
 
-        let s = conn.run(move |c| {
-            sessions
-                .filter(uuid.eq(&session_uuid))
-                .first::<Session>(c)
-                .expect("Error loading session.")
-        })
-        .await;
+        let s = conn
+            .run(move |c| {
+                sessions
+                    .filter(uuid.eq(&session_uuid))
+                    .first::<Session>(c)
+                    .expect("Error loading session.")
+            })
+            .await;
 
-        if Utc::now().naive_utc() > s.expiration  {
+        if Utc::now().naive_utc() > s.expiration {
             panic!("Session has expired!");
         }
 
@@ -74,7 +75,11 @@ pub async fn create_ticket(conn: TiraDbConn, session_uuid: String, ticket: Creat
 
         conn.run(move |c| {
             diesel::insert_into(tickets)
-                .values((&ticket, created.eq(SystemTime::now()), reporter_id.eq(the_reporter_id)))
+                .values((
+                    &ticket,
+                    created.eq(SystemTime::now()),
+                    reporter_id.eq(the_reporter_id),
+                ))
                 .execute(c)
                 .expect("Error with inserting ticket")
         })

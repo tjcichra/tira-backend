@@ -27,7 +27,10 @@ pub async fn get_user_by_id_endpoint(conn: TiraDbConn, user_id: i32) -> super::T
 }
 
 #[get("/users")]
-pub async fn get_users_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>) -> super::TiraResponse<Vec<User>> {
+pub async fn get_users_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> super::TiraResponse<Vec<User>> {
     println!("{}", cookies.get("tirauth").unwrap().value());
     controller::standardize_response(users::get_users(conn).await)
 }
