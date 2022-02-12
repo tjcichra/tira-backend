@@ -2,6 +2,7 @@ pub mod categories;
 pub mod tickets;
 pub mod users;
 
+use diesel::QueryResult;
 use rocket::response::content::Custom;
 use rocket::{
     http::ContentType,
@@ -30,4 +31,10 @@ pub fn not_found(req: &Request) -> Custom<Json<ErrorResponse>> {
             status: 404,
         }),
     )
+}
+
+pub type TiraResponse<T> = Result<Json<T>, Json<String>>;
+
+fn standardize_response<T>(result: QueryResult<T>) -> TiraResponse<T> {
+    result.map(|value| Json(value)).map_err(|err| Json(err.to_string()))
 }

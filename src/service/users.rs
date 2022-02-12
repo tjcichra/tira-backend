@@ -1,8 +1,8 @@
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, result::Error};
 
 use crate::{models::User, TiraDbConn};
 
-pub async fn create_user(conn: TiraDbConn, user: User) {
+pub async fn create_user(conn: TiraDbConn, user: User) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
     conn.run(|c| {
@@ -15,41 +15,41 @@ pub async fn create_user(conn: TiraDbConn, user: User) {
                 last_name.eq(user.last_name),
             ))
             .execute(c)
-            .expect("Error with inserting user")
     })
-    .await;
+    .await
 }
 
-pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) {
+pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| {
         diesel::delete(users.filter(id.eq(user_id)))
             .execute(c)
-            .expect("Failed to delete users table")
     })
-    .await;
+    .await
 }
 
-pub async fn delete_users(conn: TiraDbConn) {
+pub async fn delete_users(conn: TiraDbConn) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
-    conn.run(|c| {
+    match conn.run(|c| {
         diesel::delete(users)
             .execute(c)
-            .expect("Failed to delete users table");
     })
-    .await;
+    .await {
+        Ok(1) => Ok(1),
+        Ok(n) => Err(Error::NotFound),
+        x => x
+    }
 }
 
-pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> User {
+pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<User> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| {
         users
             .filter(id.eq(user_id))
             .first::<User>(c)
-            .expect("Could not find any user.")
     })
     .await
 }
