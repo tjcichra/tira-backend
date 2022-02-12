@@ -1,29 +1,38 @@
-use controller::categories;
+use crate::controller::{categories, tickets, users};
 use diesel::PgConnection;
-use rocket_sync_db_pools::database;
-
-use crate::controller::{tickets, users};
-use crate::models::User;
 use dotenv::dotenv;
+use rocket::figment::{
+    map,
+    value::{Map, Value},
+};
+use rocket_sync_db_pools::database;
+use std::env;
 
 #[macro_use]
 extern crate rocket;
 #[macro_use]
 extern crate diesel;
 
-pub mod controller;
-pub mod models;
-pub mod schema;
-pub mod service;
+mod controller;
+mod models;
+mod schema;
+mod service;
 
-#[database("r2d2_url_thingy")]
+#[database("tira_db")]
 pub struct TiraDbConn(PgConnection);
 
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
 
-    rocket::build()
+    let db_url = env::var("DATABASE_URL").expect("Environment variable DATABASE_URL not found.");
+    let db: Map<_, Value> = map! {
+        "url" => db_url.into(),
+        "pool_size" => 10_i32.into()
+    };
+    let figment = rocket::Config::figment().merge(("databases", map!["tira_db" => db]));
+
+    rocket::custom(figment)
         .attach(TiraDbConn::fairing())
         .mount(
             "/",
