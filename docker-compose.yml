@@ -7,3 +7,18 @@ services:
       - .env
     ports:
       - 5432:5432
+    restart: unless-stopped
+
+  tira:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - 8000:8000
+    env_file:
+        - .env
+    depends_on:
+      - db
+    restart: unless-stopped
