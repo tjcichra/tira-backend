@@ -25,7 +25,7 @@ pub async fn create_user(conn: TiraDbConn, user: User) -> QueryResult<usize> {
     .await
 }
 
-pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<usize> {
+pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i64) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| diesel::delete(users.filter(id.eq(user_id))).execute(c))
@@ -42,7 +42,7 @@ pub async fn delete_users(conn: TiraDbConn) -> QueryResult<usize> {
     }
 }
 
-pub async fn get_user_by_id(conn: TiraDbConn, user_id: i32) -> QueryResult<User> {
+pub async fn get_user_by_id(conn: TiraDbConn, user_id: i64) -> QueryResult<User> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| users.filter(id.eq(user_id)).first::<User>(c))
