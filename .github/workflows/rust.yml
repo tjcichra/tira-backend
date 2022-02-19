@@ -104,9 +104,9 @@ jobs:
           sudo dpkg -i cloudflared-linux-amd64.deb
       - name: Dispatch build to Oracle Cloud arm64
         run: |
-          /usr/bin/cloudflared access tcp --hostname k8s.jrcichra.dev --url 127.0.0.1:1234 --id 46ea1be6ad585778416864f114d5cff1.access --secret ${ORACLE_K8S_ACCESS_TOKEN} &
+          /usr/bin/cloudflared access tcp --hostname k8s.jrcichra.dev --url 127.0.0.1:1234 --id 46ea1be6ad585778416864f114d5cff1.access --secret "${ORACLE_K8S_ACCESS_TOKEN}" &
           sleep 10
-          echo "$KUBECONFIG_FILE" > /tmp/kubeconfig
+          echo "${KUBECONFIG_FILE}" > /tmp/kubeconfig
           cat .github/build/job.yaml | envsubst | kubectl apply --kubeconfig=/tmp/kubeconfig -f -
           echo "I dispatched the job but I don't know if it succeeded or not."
         env:
