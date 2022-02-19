@@ -22,7 +22,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=ghcr.io/tjcichra/tira_backend
+          DOCKER_IMAGE=ghcr.io/tjcichra/tira_backend_amd64
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -104,3 +104,40 @@ jobs:
           TIRA_ARCH: arm64
           TIRA_SHA: ${{ github.sha }}
           ORACLE_K8S_ACCESS_TOKEN: ${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}
+  combine-manifests:
+    runs-on: ubuntu-latest
+    needs: [build-amd64, build-arm64]
+    steps:
+      - name: Login to ghcr.io
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: tjcichra
+          password: ${{ secrets.GHCR_SECRET }}
+      - name: Combine manifests
+        run: |
+          # do it for the sha
+          export TIRA_SHA="sha-${TIRA_SHA::8}"
+          docker manifest create ghcr.io/tjcichra/tira_backend:${TIRA_SHA} --ammend \
+            ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_arm64:${TIRA_SHA}
+          docker manifest annotate ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_amd64:${TIRA_SHA} --arch amd64
+          docker manifest annotate ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_arm64:${TIRA_SHA} --arch arm64
+          docker manifest inspect ghcr.io/tjcichra/tira_backend:${TIRA_SHA}
+          docker manifest push ghcr.io/tjcichra/tira_backend:${TIRA_SHA}
+          # now for latest
+          export TIRA_SHA="latest"
+          docker manifest create ghcr.io/tjcichra/tira_backend:${TIRA_SHA} --ammend \
+            ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_arm64:${TIRA_SHA}
+          docker manifest annotate ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_amd64:${TIRA_SHA} --arch amd64
+          docker manifest annotate ghcr.io/tjcichra/tira_backend:${TIRA_SHA} \
+            ghcr.io/tjcichra/tira_backend_arm64:${TIRA_SHA} --arch arm64
+          docker manifest inspect ghcr.io/tjcichra/tira_backend:${TIRA_SHA}
+          docker manifest push ghcr.io/tjcichra/tira_backend:${TIRA_SHA}
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          TIRA_SHA: ${{ github.sha }}
