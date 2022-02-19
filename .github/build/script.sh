@@ -8,5 +8,5 @@ CONTINUE=true
 while "$CONTINUE";do
 sleep 10
 JSON=$(cat .github/build/progress.json | envsubst)
-curl -s -H 'Content-Type: application/json' -H "CF-Access-Client-Id: 46ea1be6ad585778416864f114d5cff1.access" -H "CF-Access-Client-Secret: ${ORACLE_K8S_ACCESS_TOKEN}" https://kaniko.jrcichra.dev/kaniko  -d "${JSON}" | jq -r '.message' | grep -q 'completed successfully' && CONTINUE=false
+curl -s -X GET -H 'Content-Type: application/json' -H "CF-Access-Client-Id: 46ea1be6ad585778416864f114d5cff1.access" -H "CF-Access-Client-Secret: ${ORACLE_K8S_ACCESS_TOKEN}" https://kaniko.jrcichra.dev/kaniko  -d "${JSON}" | jq -r '.message' | grep -q 'completed successfully' && CONTINUE=false
 done
