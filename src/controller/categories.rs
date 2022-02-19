@@ -9,7 +9,7 @@ pub async fn delete_categories_endpoint(conn: TiraDbConn) {
 }
 
 #[delete("/categories/<category_id>")]
-pub async fn delete_category_by_id_endpoint(conn: TiraDbConn, category_id: i32) {
+pub async fn delete_category_by_id_endpoint(conn: TiraDbConn, category_id: i64) {
     categories::delete_category_by_id(conn, category_id).await;
 }
 
@@ -27,6 +27,6 @@ pub async fn get_categories_endpoint(conn: TiraDbConn) -> Json<Vec<Category>> {
 }
 
 #[get("/categories/<category_id>")]
-pub async fn get_category_by_id_endpoint(conn: TiraDbConn, category_id: i32) -> Json<Category> {
+pub async fn get_category_by_id_endpoint(conn: TiraDbConn, category_id: i64) -> Json<Category> {
     Json(categories::get_category_by_id(conn, category_id).await)
 }

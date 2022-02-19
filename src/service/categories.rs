@@ -30,7 +30,7 @@ pub async fn delete_categories(conn: TiraDbConn) {
     .await;
 }
 
-pub async fn delete_category_by_id(conn: TiraDbConn, category_id: i32) {
+pub async fn delete_category_by_id(conn: TiraDbConn, category_id: i64) {
     use crate::schema::categories::dsl::*;
 
     conn.run(move |c| {
@@ -52,7 +52,7 @@ pub async fn get_categories(conn: TiraDbConn) -> Vec<Category> {
     .await
 }
 
-pub async fn get_category_by_id(conn: TiraDbConn, user_id: i32) -> Category {
+pub async fn get_category_by_id(conn: TiraDbConn, user_id: i64) -> Category {
     use crate::schema::categories::dsl::*;
 
     conn.run(move |c| {

@@ -12,7 +12,7 @@ pub async fn create_user_endpoint(conn: TiraDbConn, user_json: Json<User>) {
 }
 
 #[delete("/users/<user_id>")]
-pub async fn delete_user_by_id_endpoint(conn: TiraDbConn, user_id: i32) {
+pub async fn delete_user_by_id_endpoint(conn: TiraDbConn, user_id: i64) {
     users::delete_user_by_id(conn, user_id).await;
 }
 
@@ -22,7 +22,7 @@ pub async fn delete_users_endpoint(conn: TiraDbConn) {
 }
 
 #[get("/users/<user_id>")]
-pub async fn get_user_by_id_endpoint(conn: TiraDbConn, user_id: i32) -> super::TiraResponse<User> {
+pub async fn get_user_by_id_endpoint(conn: TiraDbConn, user_id: i64) -> super::TiraResponse<User> {
     controller::standardize_response(users::get_user_by_id(conn, user_id).await)
 }
 

@@ -10,8 +10,8 @@ use crate::{
 
 pub async fn create_assignment_by_ticket_id(
     conn: TiraDbConn,
-    ticket_id_parameter: i32,
-    user_id_parameter: i32,
+    ticket_id_parameter: i64,
+    user_id_parameter: i64,
 ) {
     use crate::schema::assignments::dsl::*;
 
@@ -30,8 +30,8 @@ pub async fn create_assignment_by_ticket_id(
 
 pub async fn create_comment(
     conn: TiraDbConn,
-    ticket_id_parameter: i32,
-    commenter_id_parameter: i32,
+    ticket_id_parameter: i64,
+    commenter_id_parameter: i64,
     content_parameter: String,
 ) {
     use crate::schema::comments::dsl::*;
@@ -87,7 +87,7 @@ pub async fn create_ticket(conn: TiraDbConn, session_uuid: String, ticket: Creat
     }
 }
 
-pub async fn delete_ticket_by_id(conn: TiraDbConn, ticket_id: i32) {
+pub async fn delete_ticket_by_id(conn: TiraDbConn, ticket_id: i64) {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
@@ -111,7 +111,7 @@ pub async fn delete_tickets(conn: TiraDbConn) {
 
 pub async fn get_assignments_by_ticket_id(
     conn: TiraDbConn,
-    ticket_id_parameter: i32,
+    ticket_id_parameter: i64,
 ) -> Vec<Assignment> {
     use crate::schema::assignments::dsl::*;
 
@@ -124,7 +124,7 @@ pub async fn get_assignments_by_ticket_id(
     .await
 }
 
-pub async fn get_comments_by_ticket_id(conn: TiraDbConn, ticket_id_parameter: i32) -> Vec<Comment> {
+pub async fn get_comments_by_ticket_id(conn: TiraDbConn, ticket_id_parameter: i64) -> Vec<Comment> {
     use crate::schema::comments::dsl::*;
 
     conn.run(move |c| {
@@ -136,7 +136,7 @@ pub async fn get_comments_by_ticket_id(conn: TiraDbConn, ticket_id_parameter: i3
     .await
 }
 
-pub async fn get_ticket_by_id(conn: TiraDbConn, ticket_id: i32) -> Ticket {
+pub async fn get_ticket_by_id(conn: TiraDbConn, ticket_id: i64) -> Ticket {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
