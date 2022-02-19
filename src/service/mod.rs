@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use crypto::{digest::Digest, sha2::Sha256};
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{result::Error, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 use uuid::Uuid;
 
 use crate::{models::User, TiraDbConn};
@@ -9,6 +9,16 @@ use crate::{models::User, TiraDbConn};
 pub mod categories;
 pub mod tickets;
 pub mod users;
+
+pub fn check_only_one_row_changed(result: QueryResult<usize>) -> QueryResult<()> {
+    let rows_affected = result?;
+
+    if rows_affected != 1 {
+        Err(Error::NotFound)
+    } else {
+        Ok(())
+    }
+}
 
 pub async fn login(
     conn: TiraDbConn,

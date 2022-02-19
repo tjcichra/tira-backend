@@ -1,15 +1,63 @@
-use crate::schema::assignments;
-use crate::schema::categories;
-use crate::schema::comments;
-use crate::schema::sessions;
-use crate::schema::tickets;
 use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
+
+pub mod create {
+    use crate::schema::assignments;
+    use crate::schema::categories;
+    use crate::schema::comments;
+    use crate::schema::tickets;
+    use crate::schema::users;
+    use rocket::serde::Deserialize;
+
+    #[derive(Deserialize, Insertable)]
+    #[table_name = "assignments"]
+    #[serde(crate = "rocket::serde")]
+    pub struct CreateAssignmentWithUserId {
+        pub user_id: i64,
+    }
+
+    #[derive(Deserialize, Insertable)]
+    #[table_name = "categories"]
+    #[serde(crate = "rocket::serde")]
+    pub struct CreateCategory {
+        pub name: String,
+        pub description: Option<String>,
+    }
+
+    #[derive(Deserialize, Insertable)]
+    #[table_name = "comments"]
+    #[serde(crate = "rocket::serde")]
+    pub struct CreateComment {
+        pub commenter_id: i64,
+        pub content: String,
+    }
+
+    #[derive(Deserialize, Insertable)]
+    #[table_name = "tickets"]
+    #[serde(crate = "rocket::serde")]
+    pub struct CreateTicket {
+        pub category_id: Option<i64>,
+        pub subject: String,
+        pub description: Option<String>,
+        pub status: String,
+        pub priority: String,
+    }
+
+    #[derive(Deserialize, Insertable)]
+    #[table_name = "users"]
+    #[serde(crate = "rocket::serde")]
+    pub struct CreateUser {
+        pub username: String,
+        pub password: String,
+        pub email_address: Option<String>,
+        pub first_name: Option<String>,
+        pub last_name: Option<String>,
+    }
+}
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct User {
-    #[serde(default)]
     pub id: i64,
     pub username: String,
     pub password: String,
@@ -27,14 +75,6 @@ pub struct Category {
     pub created: NaiveDateTime,
 }
 
-#[derive(Deserialize, Insertable)]
-#[table_name = "categories"]
-#[serde(crate = "rocket::serde")]
-pub struct CreateCategory {
-    pub name: String,
-    pub description: Option<String>,
-}
-
 #[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Ticket {
@@ -48,30 +88,12 @@ pub struct Ticket {
     pub reporter_id: i64,
 }
 
-#[derive(Deserialize, Insertable)]
-#[table_name = "tickets"]
-#[serde(crate = "rocket::serde")]
-pub struct CreateTicket {
-    pub category_id: Option<i64>,
-    pub subject: String,
-    pub description: Option<String>,
-    pub status: String,
-    pub priority: String,
-}
-
 #[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Assignment {
     pub ticket_id: i64,
     pub user_id: i64,
     pub assigned: NaiveDateTime,
-}
-
-#[derive(Deserialize, Insertable)]
-#[table_name = "assignments"]
-#[serde(crate = "rocket::serde")]
-pub struct CreateAssignmentWithUserId {
-    pub user_id: i64,
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -82,14 +104,6 @@ pub struct Comment {
     pub commenter_id: i64,
     pub content: String,
     pub commented: NaiveDateTime,
-}
-
-#[derive(Deserialize, Insertable)]
-#[table_name = "comments"]
-#[serde(crate = "rocket::serde")]
-pub struct CreateComment {
-    pub commenter_id: i64,
-    pub content: String,
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]

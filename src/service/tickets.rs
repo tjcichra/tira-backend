@@ -4,7 +4,7 @@ use chrono::Utc;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
-    models::{Assignment, Comment, CreateTicket, Session, Ticket},
+    models::{create::CreateTicket, Assignment, Comment, Session, Ticket},
     TiraDbConn,
 };
 

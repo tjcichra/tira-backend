@@ -1,5 +1,6 @@
 use crate::models::{
-    Assignment, Comment, CreateAssignmentWithUserId, CreateComment, CreateTicket, Ticket,
+    create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
+    Assignment, Comment, Ticket,
 };
 use crate::service::tickets;
 use crate::TiraDbConn;
