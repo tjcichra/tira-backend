@@ -112,6 +112,5 @@ jobs:
         env:
           TIRA_ARCH: arm64
           TIRA_SHA: ${{ github.sha }}
-          HTTPS_PROXY: socks5://127.0.0.1:1234
           KUBECONFIG_FILE: ${{ secrets.KUBECONFIG }}
           ORACLE_K8S_ACCESS_TOKEN: ${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}
