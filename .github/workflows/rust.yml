@@ -100,9 +100,11 @@ jobs:
             return repo.data
       - name: Dispatch build to kaniko.jrcichra.dev
         run: |
+          # only get the first 8 characters of the sha
+          export TIRA_SHA=${TIRA_SHA::8}
           JSON=$(cat .github/build/request.json | envsubstr)
           curl -X POST -s -H 'Content-Type: application/json' -H "CF-Access-Client-Id: 46ea1be6ad585778416864f114d5cff1.access" -H "CF-Access-Client-Secret: ${ORACLE_K8S_ACCESS_TOKEN}" -d '$JSON' https://kaniko.jrcichra.dev/kaniko
         env:
           TIRA_ARCH: arm64
-          TIRA_SHA: ${{ github.sha::8 }}
+          TIRA_SHA: ${{ github.sha }}
           ORACLE_K8S_ACCESS_TOKEN: ${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}
