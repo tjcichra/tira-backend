@@ -105,11 +105,12 @@ jobs:
       - name: Dispatch build to Oracle Cloud arm64
         run: |
           /usr/bin/cloudflared access tcp --hostname k8s.jrcichra.dev --url 127.0.0.1:1234 &
-          tree .
-          cat .github/build/job.yaml | envsubst | kubectl apply -f -
+          echo "$KUBECONFIG_FILE" > /tmp/kubeconfig
+          cat .github/build/job.yaml | envsubst | kubectl apply --kubeconfig=/tmp/kubeconfig -f -
           echo "I dispatched the job but I don't know if it succeeded or not."
         env:
           TIRA_ARCH: arm64
           TIRA_SHA: ${{ github.sha }}
           HTTPS_PROXY: socks5://127.0.0.1:1234
+          KUBECONFIG_FILE: ${{ secrets.KUBECONFIG }}
           ORACLE_K8S_ACCESS_TOKEN: ${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}
