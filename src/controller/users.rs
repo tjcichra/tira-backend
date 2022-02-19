@@ -1,6 +1,6 @@
+use crate::models::User;
 use crate::service::users;
 use crate::TiraDbConn;
-use crate::models::User;
 use rocket::http::CookieJar;
 use rocket::serde::json::Json;
 
