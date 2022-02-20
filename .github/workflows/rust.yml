@@ -22,7 +22,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=ghcr.io/tjcichra/tira_backend
+          DOCKER_IMAGE=ghcr.io/tjcichra/tira_backend_amd64
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -41,9 +41,8 @@ jobs:
             MINOR=${VERSION%.*}
             MAJOR=${MINOR%.*}
             TAGS="$TAGS,${DOCKER_IMAGE}:${MINOR},${DOCKER_IMAGE}:${MAJOR},${DOCKER_IMAGE}:latest"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
           fi
+          TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -69,7 +68,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.prep.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -104,3 +103,28 @@ jobs:
           TIRA_ARCH: arm64
           TIRA_SHA: ${{ github.sha }}
           ORACLE_K8S_ACCESS_TOKEN: ${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}
+  combine-manifests:
+    runs-on: ubuntu-latest
+    needs: [build-amd64, build-arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Repo metadata
+        id: repo
+        uses: actions/github-script@v3
+        with:
+          script: |
+            const repo = await github.repos.get(context.repo)
+            return repo.data
+      - name: Login to ghcr.io
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: tjcichra
+          password: ${{ secrets.GHCR_SECRET }}
+      - name: Combine manifests
+        run: .github/build/manifest.sh
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          TIRA_SHA: ${{ github.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
