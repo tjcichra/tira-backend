@@ -2,34 +2,59 @@ use crate::controller::TiraResponse;
 use crate::models::{create::CreateUser, User};
 use crate::service::users;
 use crate::TiraDbConn;
+use rocket::http::CookieJar;
 use rocket::serde::json::Json;
 
 use crate::controller;
 
+/// Endpoint for archiving a specific user.
+//
+/// Requires authentication.
+///
+/// **DELETE /users/<user_id>**
+#[delete("/users/<user_id>")]
+pub async fn archive_user_by_id_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, user_id: i64) -> TiraResponse<()> {
+    controller::authentication(&conn, cookies).await?;
+    controller::standardize_response_ok(users::archive_user_by_id(&conn, user_id).await)
+}
+
+/// Endpoint for creating a user.
+///
+/// **POST /users**
+///
+/// Example JSON Body:
+///
+/// {
+///     "username": "testusername",
+///     "password": "testsha256password",
+///     "email_address": "testemailaddress",
+///     "first_name": "testfirstname",
+///     "last_name": "testtestname",
+/// }
 #[post("/users", data = "<user_json>")]
 pub async fn create_user_endpoint(
     conn: TiraDbConn,
     user_json: Json<CreateUser>,
-) -> TiraResponse<usize> {
-    controller::standardize_response(users::create_user(conn, user_json.0).await)
+) -> TiraResponse<()> {
+    controller::standardize_response_ok(users::create_user(&conn, user_json.0).await)
 }
 
-#[delete("/users/<user_id>")]
-pub async fn delete_user_by_id_endpoint(conn: TiraDbConn, user_id: i64) -> TiraResponse<()> {
-    controller::standardize_response(users::delete_user_by_id(conn, user_id).await)
-}
-
-#[delete("/users")]
-pub async fn delete_users_endpoint(conn: TiraDbConn) -> TiraResponse<usize> {
-    controller::standardize_response(users::delete_users(conn).await)
-}
-
+/// Endpoint for retrieving a user.
+///
+/// **GET /users/<user_id>**
 #[get("/users/<user_id>")]
 pub async fn get_user_by_id_endpoint(conn: TiraDbConn, user_id: i64) -> TiraResponse<User> {
-    controller::standardize_response(users::get_user_by_id(conn, user_id).await)
+    controller::standardize_response_ok(users::get_user_by_id(&conn, user_id).await)
 }
 
-#[get("/users")]
-pub async fn get_users_endpoint(conn: TiraDbConn) -> TiraResponse<Vec<User>> {
-    controller::standardize_response(users::get_users(conn).await)
+/// Endpoint for retrieving every user.
+///
+/// **GET /users**
+/// 
+/// Query Parameters:
+/// 
+/// archived: Used to filter users that are archived or not. Takes a boolean value. (optional)
+#[get("/users?<archived>")]
+pub async fn get_users_endpoint(conn: TiraDbConn, archived: Option<bool>) -> TiraResponse<Vec<User>> {
+    controller::standardize_response_ok(users::get_users(&conn, archived).await)
 }

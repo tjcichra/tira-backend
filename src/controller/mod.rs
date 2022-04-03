@@ -1,61 +1,128 @@
 pub mod categories;
+pub mod sessions;
 pub mod tickets;
 pub mod users;
 
-use diesel::QueryResult;
-use rocket::http::{Cookie, CookieJar};
-use rocket::response::content::Custom;
+use crate::models::Login;
+use chrono::Utc;
+use diesel::{
+    result::{Error as QueryError},
+    ExpressionMethods, QueryDsl, RunQueryDsl,
+};
+use rocket::http::{Cookie, CookieJar, Status};
+use rocket::response::{content, status};
 use rocket::{
     http::ContentType,
-    serde::{json::Json, Deserialize, Serialize},
+    serde::{json::Json, Serialize},
     Request,
 };
 
+use crate::models::Session;
 use crate::{service, TiraDbConn};
+
+const TIRA_AUTH_COOKIE: &str = "tirauth";
+
+pub type TiraSuccessResponse<T> = status::Custom<Json<T>>;
+pub type TiraErrorResponse = status::Custom<Json<TiraMessage>>;
+
+pub type TiraResponse<T> = Result<TiraSuccessResponse<T>, TiraErrorResponse>;
+pub type BlankTiraResponse = Result<(), TiraErrorResponse>;
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct ErrorResponse {
-    detail: String,
-    #[serde(rename = "type")]
-    type_: String,
-    status: i32,
+pub struct TiraMessage {
+    pub message: String,
 }
 
-#[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
-pub struct Login {
-    username: String,
-    password: String,
-}
-
-#[post("/login", data = "<login_info>")]
-pub async fn login_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, login_info: Json<Login>) {
-    let login_info = login_info.0;
-    let uuid = service::login(conn, login_info.username, login_info.password)
-        .await
-        .unwrap();
-    cookies.add(Cookie::new("tirauth", uuid));
+/// For converting diesel's query errors to generic tira errors.
+impl From<QueryError> for TiraMessage {
+    fn from(query_error: QueryError) -> Self {
+        Self {
+            message: query_error.to_string(),
+        }
+    }
 }
 
 #[catch(404)]
-pub fn not_found(req: &Request) -> Custom<Json<ErrorResponse>> {
+pub fn not_found(req: &Request) -> content::Custom<Json<TiraMessage>> {
     let custom = ContentType::new("application", "problem+json");
 
-    Custom(
+    content::Custom(
         custom,
-        Json(ErrorResponse {
-            detail: format!("Sorry, '{}' is not a valid path.", req.uri()),
-            type_: "https://docs.diesel.rs/diesel/result/enum.Error.html".to_string(),
-            status: 404,
+        Json(TiraMessage {
+            message: format!("Sorry, '{}' is not a valid path.", req.uri()),
         }),
     )
 }
 
-pub type TiraResponse<T> = Result<Json<T>, Json<String>>;
-
-fn standardize_response<T>(result: QueryResult<T>) -> TiraResponse<T> {
+/// Method for
+fn standardize_response<T, E: Into<TiraMessage>>(
+    result: Result<T, E>,
+    success_status: Status,
+) -> TiraResponse<T> {
     result
-        .map(|value| Json(value))
-        .map_err(|err| Json(err.to_string()))
+        .map(|value| status::Custom(success_status, Json(value)))
+        .map_err(|err| {
+            let error = err.into();
+            status::Custom(Status::InternalServerError, Json(error))
+        })
+}
+
+fn standardize_response_ok<T, E: Into<TiraMessage>>(result: Result<T, E>) -> TiraResponse<T> {
+    standardize_response(result, Status::Ok)
+}
+
+fn standardize_error_response<T, E: Into<TiraMessage>>(result: Result<T, E>) -> Result<T, TiraErrorResponse> {
+    result.map_err(|err| status::Custom(Status::InternalServerError, Json(err.into())))
+}
+
+/// Service method that checks for authentication given a user's cookies
+///
+/// Returns the user id of that user if they are authenticated or returns an error response
+async fn authentication(
+    conn: &TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> Result<i64, TiraErrorResponse> {
+    use crate::schema::sessions::dsl::*;
+
+    let cookie = cookies.get(TIRA_AUTH_COOKIE);
+
+    match cookie {
+        Some(cookie) => {
+            let session_uuid = cookie.value().to_string();
+            let session_uuid_2 = session_uuid.clone();
+
+            let session = conn
+                .run(|c| sessions.filter(uuid.eq(session_uuid)).first::<Session>(c))
+                .await;
+
+            match session {
+                Ok(session) => {
+                    if Utc::now().naive_utc() > session.expiration {
+                        // Delete expired session
+                        conn.run(|c| {
+                            diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
+                        });
+
+                        // Return error message saying session has expired
+                        Err(status::Custom(
+                            Status::Forbidden,
+                            Json(TiraMessage {
+                                message: "Session has expired, please log in again.".to_string(),
+                            }),
+                        ))
+                    } else {
+                        Ok(session.user_id)
+                    }
+                },
+                Err(error) => Err(status::Custom(Status::Forbidden, Json(error.into()))),
+            }
+        }
+        None => Err(status::Custom(
+            Status::Forbidden,
+            Json(TiraMessage {
+                message: "User not authenticated.".to_string(),
+            }),
+        )),
+    }
 }

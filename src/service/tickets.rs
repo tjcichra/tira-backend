@@ -1,160 +1,53 @@
-use std::time::SystemTime;
+use crate::{dao::tickets, TiraDbConn, models::{Ticket, create::{CreateComment, CreateTicket, CreateAssignmentWithUserId}, Assignment, Comment}, controller::TiraMessage, service};
+use diesel::result::Error as QueryError;
 
-use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
-
-use crate::{
-    models::{create::CreateTicket, Assignment, Comment, Session, Ticket},
-    TiraDbConn,
-};
-
-pub async fn create_assignment_by_ticket_id(
-    conn: TiraDbConn,
-    ticket_id_parameter: i64,
-    user_id_parameter: i64,
-) {
-    use crate::schema::assignments::dsl::*;
-
-    conn.run(move |c| {
-        diesel::insert_into(assignments)
-            .values((
-                ticket_id.eq(ticket_id_parameter),
-                user_id.eq(user_id_parameter),
-                assigned.eq(SystemTime::now()),
-            ))
-            .execute(c)
-            .expect("Error with inserting assignment")
-    })
-    .await;
+/// Service function for creating an assignment by ticket id and assigner id.
+pub async fn create_assignment_by_ticket_id_and_assigner_id(
+    conn: &TiraDbConn,
+    assignee_id: CreateAssignmentWithUserId,
+    ticket_id: i64,
+    assigner_id: i64
+) -> Result<(), TiraMessage> {
+    let assignments_created = tickets::create_assignment_by_ticket_id_and_assigner_id(conn, assignee_id, ticket_id, assigner_id).await;
+    service::check_only_one_row_changed(assignments_created)
 }
 
-pub async fn create_comment(
-    conn: TiraDbConn,
-    ticket_id_parameter: i64,
-    commenter_id_parameter: i64,
-    content_parameter: String,
-) {
-    use crate::schema::comments::dsl::*;
-
-    conn.run(move |c| {
-        diesel::insert_into(comments)
-            .values((
-                ticket_id.eq(ticket_id_parameter),
-                commenter_id.eq(commenter_id_parameter),
-                content.eq(content_parameter),
-                commented.eq(SystemTime::now()),
-            ))
-            .execute(c)
-            .expect("Error with inserting comment")
-    })
-    .await;
+/// Service function for creating a comment by ticket id.
+pub async fn create_comment_by_ticket_id_and_commenter_id(
+    conn: &TiraDbConn,
+    comment: CreateComment,
+    ticket_id: i64,
+    commenter_id: i64,
+) -> Result<(), TiraMessage> {
+    let comments_created = tickets::create_comment_by_ticket_id_and_commenter_id(conn, comment, ticket_id, commenter_id).await;
+    service::check_only_one_row_changed(comments_created)
 }
 
-pub async fn create_ticket(conn: TiraDbConn, session_uuid: String, ticket: CreateTicket) {
-    let the_reporter_id = {
-        use crate::schema::sessions::dsl::*;
-
-        let s = conn
-            .run(move |c| {
-                sessions
-                    .filter(uuid.eq(&session_uuid))
-                    .first::<Session>(c)
-                    .expect("Error loading session.")
-            })
-            .await;
-
-        if Utc::now().naive_utc() > s.expiration {
-            panic!("Session has expired!");
-        }
-
-        s.user_id
-    };
-
-    {
-        use crate::schema::tickets::dsl::*;
-
-        conn.run(move |c| {
-            diesel::insert_into(tickets)
-                .values((
-                    &ticket,
-                    created.eq(SystemTime::now()),
-                    reporter_id.eq(the_reporter_id),
-                ))
-                .execute(c)
-                .expect("Error with inserting ticket")
-        })
-        .await;
-    }
+/// Service function for creating a ticket by reporter id.
+pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id: i64) -> Result<(), TiraMessage> {
+    let tickets_created = tickets::create_ticket_by_reporter_id(conn, ticket, reporter_id).await;
+    service::check_only_one_row_changed(tickets_created)
 }
 
-pub async fn delete_ticket_by_id(conn: TiraDbConn, ticket_id: i64) {
-    use crate::schema::tickets::dsl::*;
-
-    conn.run(move |c| {
-        diesel::delete(tickets.filter(id.eq(ticket_id)))
-            .execute(c)
-            .expect("Failed to delete ticket by id")
-    })
-    .await;
-}
-
-pub async fn delete_tickets(conn: TiraDbConn) {
-    use crate::schema::tickets::dsl::*;
-
-    conn.run(|c| {
-        diesel::delete(tickets)
-            .execute(c)
-            .expect("Failed to delete tickets table");
-    })
-    .await;
-}
-
+/// Service function for retrieving assignments by ticket id.
 pub async fn get_assignments_by_ticket_id(
-    conn: TiraDbConn,
-    ticket_id_parameter: i64,
-) -> Vec<Assignment> {
-    use crate::schema::assignments::dsl::*;
-
-    conn.run(move |c| {
-        assignments
-            .filter(ticket_id.eq(ticket_id_parameter))
-            .load::<Assignment>(c)
-            .expect("Could not find any assignments.")
-    })
-    .await
+    conn: &TiraDbConn,
+    ticket_id: i64,
+) -> Result<Vec<Assignment>, QueryError> {
+    tickets::get_assignments_by_ticket_id(conn, ticket_id).await
 }
 
-pub async fn get_comments_by_ticket_id(conn: TiraDbConn, ticket_id_parameter: i64) -> Vec<Comment> {
-    use crate::schema::comments::dsl::*;
-
-    conn.run(move |c| {
-        comments
-            .filter(ticket_id.eq(ticket_id_parameter))
-            .load::<Comment>(c)
-            .expect("Error loading comments.")
-    })
-    .await
+/// Service function for retrieving comments by ticket id.
+pub async fn get_comments_by_ticket_id(conn: &TiraDbConn, ticket_id: i64) -> Result<Vec<Comment>, QueryError> {
+    tickets::get_comments_by_ticket_id(conn, ticket_id).await
 }
 
-pub async fn get_ticket_by_id(conn: TiraDbConn, ticket_id: i64) -> Ticket {
-    use crate::schema::tickets::dsl::*;
-
-    conn.run(move |c| {
-        tickets
-            .filter(id.eq(ticket_id))
-            .first::<Ticket>(c)
-            .expect("Could not find any ticket.")
-    })
-    .await
+/// Service function for retrieving a ticket by id.
+pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> Result<Ticket, QueryError> {
+    tickets::get_ticket_by_id(conn, ticket_id).await
 }
 
-pub async fn get_tickets(conn: TiraDbConn) -> Vec<Ticket> {
-    use crate::schema::tickets::dsl::*;
-
-    conn.run(|c| {
-        tickets
-            .load::<Ticket>(c)
-            .expect("Error with retrieving tickets")
-    })
-    .await
+/// Service function for retrieving all tickets.
+pub async fn get_tickets(conn: &TiraDbConn) -> Result<Vec<Ticket>, QueryError> {
+    tickets::get_tickets(conn).await
 }

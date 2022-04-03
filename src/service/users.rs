@@ -1,45 +1,26 @@
 use crate::{
     models::{create::CreateUser, User},
-    service, TiraDbConn,
+    service, TiraDbConn, dao::users, controller::TiraMessage,
 };
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::QueryResult;
 
-pub async fn create_user(conn: TiraDbConn, user: CreateUser) -> QueryResult<usize> {
-    use crate::schema::users::dsl::*;
-
-    conn.run(move |c| {
-        diesel::insert_into(users)
-            .values(&user)
-            .execute(c)
-    })
-    .await
+/// Service function for archiving a user by id.
+pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> Result<(), TiraMessage> {
+    let users_archived = users::archive_user_by_id(conn, user_id).await;
+    service::check_only_one_row_changed(users_archived)
 }
 
-pub async fn delete_user_by_id(conn: TiraDbConn, user_id: i64) -> QueryResult<()> {
-    use crate::schema::users::dsl::*;
-
-    let result = conn
-        .run(move |c| diesel::delete(users.filter(id.eq(user_id))).execute(c))
-        .await;
-
-    service::check_only_one_row_changed(result)
+/// Service function for creating a user.
+pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> Result<(), TiraMessage> {
+    let users_created = users::create_user(conn, user).await;
+    service::check_only_one_row_changed(users_created)
 }
 
-pub async fn delete_users(conn: TiraDbConn) -> QueryResult<usize> {
-    use crate::schema::users::dsl::*;
-
-    conn.run(|c| diesel::delete(users).execute(c)).await
+/// Service function for retrieving a user by id.
+pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<User> {
+    users::get_user_by_id(conn, user_id).await
 }
 
-pub async fn get_user_by_id(conn: TiraDbConn, user_id: i64) -> QueryResult<User> {
-    use crate::schema::users::dsl::*;
-
-    conn.run(move |c| users.filter(id.eq(user_id)).first::<User>(c))
-        .await
-}
-
-pub async fn get_users(conn: TiraDbConn) -> QueryResult<Vec<User>> {
-    use crate::schema::users::dsl::*;
-
-    conn.run(|c| users.load::<User>(c)).await
+pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> QueryResult<Vec<User>> {
+    users::get_users(conn, filter_archived).await
 }

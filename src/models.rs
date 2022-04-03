@@ -13,7 +13,7 @@ pub mod create {
     #[table_name = "assignments"]
     #[serde(crate = "rocket::serde")]
     pub struct CreateAssignmentWithUserId {
-        pub user_id: i64,
+        pub assignee_id: i64,
     }
 
     #[derive(Deserialize, Insertable)]
@@ -28,7 +28,6 @@ pub mod create {
     #[table_name = "comments"]
     #[serde(crate = "rocket::serde")]
     pub struct CreateComment {
-        pub commenter_id: i64,
         pub content: String,
     }
 
@@ -64,6 +63,8 @@ pub struct User {
     pub email_address: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
+    pub created: NaiveDateTime,
+    pub archived: bool,
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -72,7 +73,9 @@ pub struct Category {
     pub id: i64,
     pub name: String,
     pub description: Option<String>,
+    pub creator_id: i64,
     pub created: NaiveDateTime,
+    pub archived: bool,
 }
 
 #[derive(Queryable, Debug, Serialize, Deserialize)]
@@ -91,8 +94,10 @@ pub struct Ticket {
 #[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Assignment {
+    pub id: i64,
     pub ticket_id: i64,
-    pub user_id: i64,
+    pub assignee_id: i64,
+    pub assigner_id: i64,
     pub assigned: NaiveDateTime,
 }
 
@@ -113,4 +118,11 @@ pub struct Session {
     pub user_id: i64,
     pub created: NaiveDateTime,
     pub expiration: NaiveDateTime,
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Login {
+    pub username: String,
+    pub password: String,
 }

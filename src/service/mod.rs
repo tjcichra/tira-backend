@@ -1,61 +1,45 @@
-use std::time::{Duration, SystemTime};
+use std::{time::{Duration, SystemTime}, cmp::Ordering};
 
-use crypto::{digest::Digest, sha2::Sha256};
 use diesel::{result::Error, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 use uuid::Uuid;
 
-use crate::{models::User, TiraDbConn};
+use crate::{
+    controller::TiraMessage,
+    models::{Login, User},
+    TiraDbConn,
+};
 
 pub mod categories;
+pub mod sessions;
 pub mod tickets;
 pub mod users;
 
-pub fn check_only_one_row_changed(result: QueryResult<usize>) -> QueryResult<()> {
-    let rows_affected = result?;
+pub fn check_only_one_row_changed<E: Into<TiraMessage>>(
+    result: Result<usize, E>,
+) -> Result<(), TiraMessage> {
+    let rows_affected = match result {
+        Ok(num) => num,
+        Err(error) => return Err(error.into()),
+    };
 
-    if rows_affected != 1 {
-        Err(Error::NotFound)
-    } else {
-        Ok(())
+    match rows_affected.cmp(&1) {
+        Ordering::Equal => Ok(()),
+        Ordering::Less => Err(TiraMessage { message: "No row was affected".to_string() }),
+        Ordering::Greater => Err(TiraMessage { message: "More than one row was affected".to_string() }),
     }
 }
 
-pub async fn login(
-    conn: TiraDbConn,
-    username_input: String,
-    password_input: String,
-) -> QueryResult<String> {
-    let user = {
-        use crate::schema::users::dsl::*;
-
-        let mut hasher = Sha256::new();
-        hasher.input_str(&password_input);
-        let hex = hasher.result_str();
-
-        conn.run(move |c| {
-            users
-                .filter(username.eq(username_input))
-                .filter(password.eq(hex))
-                .first::<User>(c)
-        })
-        .await?
+pub fn check_at_least_one_row_changed<E: Into<TiraMessage>>(
+    result: Result<usize, E>,
+) -> Result<(), TiraMessage> {
+    let rows_affected = match result {
+        Ok(num) => num,
+        Err(error) => return Err(error.into()),
     };
 
-    use crate::schema::sessions::dsl::*;
-
-    let my_uuid = Uuid::new_v4();
-
-    conn.run(move |c| {
-        diesel::insert_into(sessions)
-            .values((
-                uuid.eq(my_uuid.to_string()),
-                user_id.eq(user.id),
-                created.eq(SystemTime::now()),
-                expiration.eq(SystemTime::now() + Duration::from_secs(30)),
-            ))
-            .execute(c)
-    })
-    .await?;
-
-    Ok(my_uuid.to_string())
+    if rows_affected <= 0 {
+        Err(TiraMessage { message: "No row was affected".to_string() })
+    } else {
+        Ok(())
+    }
 }

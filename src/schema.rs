@@ -1,7 +1,9 @@
 table! {
-    assignments (ticket_id, user_id) {
+    assignments (id) {
+        id -> Int8,
         ticket_id -> Int8,
-        user_id -> Int8,
+        assignee_id -> Int8,
+        assigner_id -> Int8,
         assigned -> Timestamp,
     }
 }
@@ -11,7 +13,9 @@ table! {
         id -> Int8,
         name -> Text,
         description -> Nullable<Text>,
+        creator_id -> Int8,
         created -> Timestamp,
+        archived -> Bool,
     }
 }
 
@@ -55,11 +59,13 @@ table! {
         email_address -> Nullable<Text>,
         first_name -> Nullable<Text>,
         last_name -> Nullable<Text>,
+        created -> Timestamp,
+        archived -> Bool,
     }
 }
 
 joinable!(assignments -> tickets (ticket_id));
-joinable!(assignments -> users (user_id));
+joinable!(categories -> users (creator_id));
 joinable!(comments -> tickets (ticket_id));
 joinable!(comments -> users (commenter_id));
 joinable!(sessions -> users (user_id));
