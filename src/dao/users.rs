@@ -1,6 +1,6 @@
 use chrono::Utc;
 use crate::{
-    models::{create::CreateUser, User, Login},
+    models::{create::CreateUser, User, Login, Assignment},
     TiraDbConn,
 };
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
@@ -19,6 +19,14 @@ pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> QueryResult<usi
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| diesel::insert_into(users).values((&user, created.eq(Utc::now().naive_utc()))).execute(c))
+        .await
+}
+
+/// DAO function for retrieving all assignments for a user.
+pub async fn get_assignments_by_user_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<Vec<Assignment>> {
+    use crate::schema::assignments::dsl::*;
+
+    conn.run(move |c| assignments.filter(assignee_id.eq(user_id)).load::<Assignment>(c))
         .await
 }
 

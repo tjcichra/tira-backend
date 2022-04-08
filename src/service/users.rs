@@ -1,6 +1,6 @@
 use crate::{
-    models::{create::CreateUser, User},
-    service, TiraDbConn, dao::users, controller::TiraMessage,
+    models::{create::CreateUser, User, Assignment},
+    service, TiraDbConn, dao::{users, self}, controller::TiraMessage,
 };
 use diesel::QueryResult;
 
@@ -14,6 +14,11 @@ pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> Result<(), T
 pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> Result<(), TiraMessage> {
     let users_created = users::create_user(conn, user).await;
     service::check_only_one_row_changed(users_created)
+}
+
+/// Service function for retrieving all assignments for a user.
+pub async fn get_assignments_by_user_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<Vec<Assignment>> {
+    dao::users::get_assignments_by_user_id(conn, user_id).await
 }
 
 /// Service function for retrieving a user by id.

@@ -1,6 +1,7 @@
 use crate::controller::TiraResponse;
+use crate::models::Assignment;
 use crate::models::{create::CreateUser, User};
-use crate::service::users;
+use crate::service::{users, self};
 use crate::TiraDbConn;
 use rocket::http::CookieJar;
 use rocket::serde::json::Json;
@@ -37,6 +38,18 @@ pub async fn create_user_endpoint(
     user_json: Json<CreateUser>,
 ) -> TiraResponse<()> {
     controller::standardize_response_ok(users::create_user(&conn, user_json.0).await)
+}
+
+/// Endpoint for retrieving all assignments for a user.
+///
+/// **GET /users/<user_id>/assignments**
+#[get("/users/<user_id>/assignments")]
+pub async fn get_assignments_by_user_id_endpoint(
+    conn: TiraDbConn,
+    user_id: i64
+) -> TiraResponse<Vec<Assignment>> {
+    let assignments = service::users::get_assignments_by_user_id(&conn, user_id).await;
+    controller::standardize_response_ok(assignments)
 }
 
 /// Endpoint for retrieving a user.
