@@ -52,7 +52,7 @@ pub async fn create_category_endpoint(
 /// Query Parameters:
 /// 
 /// archived: Used to filter categories that are archived or not. Takes a boolean value. (optional)
-#[get("/categories?archived&<archived>")]
+#[get("/categories?<archived>")]
 pub async fn get_categories_endpoint(conn: TiraDbConn, archived: Option<bool>) -> TiraResponse<Vec<Category>> {
     controller::standardize_response_ok(categories::get_categories(&conn, archived).await)
 }
