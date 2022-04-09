@@ -3,13 +3,12 @@ pub mod sessions;
 pub mod tickets;
 pub mod users;
 
-use crate::models::Login;
 use chrono::Utc;
 use diesel::{
     result::{Error as QueryError},
     ExpressionMethods, QueryDsl, RunQueryDsl,
 };
-use rocket::http::{Cookie, CookieJar, Status};
+use rocket::http::{CookieJar, Status};
 use rocket::response::{content, status};
 use rocket::{
     http::ContentType,
@@ -18,7 +17,7 @@ use rocket::{
 };
 
 use crate::models::Session;
-use crate::{service, TiraDbConn};
+use crate::TiraDbConn;
 
 const TIRA_AUTH_COOKIE: &str = "tirauth";
 
@@ -26,7 +25,6 @@ pub type TiraSuccessResponse<T> = status::Custom<Json<T>>;
 pub type TiraErrorResponse = status::Custom<Json<TiraMessage>>;
 
 pub type TiraResponse<T> = Result<TiraSuccessResponse<T>, TiraErrorResponse>;
-pub type BlankTiraResponse = Result<(), TiraErrorResponse>;
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -102,7 +100,7 @@ async fn authentication(
                         // Delete expired session
                         conn.run(|c| {
                             diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
-                        });
+                        }).await.unwrap();
 
                         // Return error message saying session has expired
                         Err(status::Custom(

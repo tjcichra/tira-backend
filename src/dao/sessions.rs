@@ -1,22 +1,22 @@
 use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl, QueryResult};
+use diesel::{ExpressionMethods, RunQueryDsl, QueryResult};
 
-use crate::{TiraDbConn, models::Session};
+use crate::TiraDbConn;
 use std::time::SystemTime;
 use std::time::Duration;
 
 /// DAO function for retrieving session by session_uuid.
-pub async fn get_session_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<Session> {
-    use crate::schema::sessions::dsl::*;
+// pub async fn get_session_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<Session> {
+//     use crate::schema::sessions::dsl::*;
 
-    conn
-        .run(move |c| {
-            sessions
-                .filter(uuid.eq(&session_uuid))
-                .first::<Session>(c)
-        })
-        .await
-}
+//     conn
+//         .run(move |c| {
+//             sessions
+//                 .filter(uuid.eq(&session_uuid))
+//                 .first::<Session>(c)
+//         })
+//         .await
+// }
 
 /// DAO function for creating session by session_uuid and user_id.
 pub async fn create_session_by_session_uuid_and_user_id(conn: &TiraDbConn, session_uuid: String, user_id_parameter: i64) -> QueryResult<usize> {
