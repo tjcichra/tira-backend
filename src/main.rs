@@ -68,6 +68,7 @@ fn rocket() -> _ {
                 categories::get_category_by_id_endpoint,
                 sessions::login_endpoint,
                 sessions::login_options_endpoint,
+                sessions::logout_endpoint,
                 tickets::create_assignment_by_ticket_id_endpoint,
                 tickets::create_comment_by_ticket_id_endpoint,
                 tickets::create_ticket_endpoint,

@@ -20,3 +20,9 @@ pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<String, TiraM
 
     Ok(my_uuid.to_string())
 }
+
+/// Service function for having a user log out.
+pub async fn logout(conn: &TiraDbConn, user_id: i64) -> Result<(), TiraMessage> {
+    let sessions_deleted = dao::sessions::delete_sessions_by_user_id(conn, user_id).await;
+    service::check_at_least_one_row_changed(sessions_deleted)
+}

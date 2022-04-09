@@ -33,3 +33,20 @@ pub async fn login_endpoint(
 /// OPTIONS endpoint for login.
 #[options("/login")]
 pub async fn login_options_endpoint() {}
+
+/// Endpoint for logging out.
+///
+/// **POST /logout**
+///
+/// Requires authentication.
+#[post("/logout")]
+pub async fn logout_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>
+) -> TiraResponse<()> {
+    let user_id = controller::authentication(&conn, cookies).await?;
+    controller::standardize_error_response(service::sessions::logout(&conn, user_id).await)?;
+
+    // cookies.remove(Cookie::named(TIRA_AUTH_COOKIE));
+    Ok(status::Custom(Status::NoContent, Json(())))
+}
