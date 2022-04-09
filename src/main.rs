@@ -34,10 +34,10 @@ impl Fairing for CORS {
     }
 
     async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Origin", "http://localhost:3000"));
         response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS"));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
-        response.set_header(Header::new("Access-Control-Allow-Credentials", "false"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
 }
 
@@ -67,6 +67,7 @@ fn rocket() -> _ {
                 categories::get_categories_endpoint,
                 categories::get_category_by_id_endpoint,
                 sessions::login_endpoint,
+                sessions::login_options_endpoint,
                 tickets::create_assignment_by_ticket_id_endpoint,
                 tickets::create_comment_by_ticket_id_endpoint,
                 tickets::create_ticket_endpoint,

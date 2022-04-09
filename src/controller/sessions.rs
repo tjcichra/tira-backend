@@ -1,4 +1,4 @@
-use rocket::{http::{Cookie, CookieJar, Status}, serde::json::Json, response::status};
+use rocket::{http::{Cookie, CookieJar, Status, SameSite}, serde::json::Json, response::status};
 
 use crate::controller::{self, TIRA_AUTH_COOKIE, TiraResponse};
 use crate::models::Login;
@@ -29,3 +29,7 @@ pub async fn login_endpoint(
     cookies.add(Cookie::new(TIRA_AUTH_COOKIE, uuid));
     Ok(status::Custom(Status::Created, Json(())))
 }
+
+/// OPTIONS endpoint for login.
+#[options("/login")]
+pub async fn login_options_endpoint() {}
