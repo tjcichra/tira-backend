@@ -79,6 +79,7 @@ fn rocket() -> _ {
                 users::archive_user_by_id_endpoint,
                 users::create_user_endpoint,
                 users::get_assignments_by_user_id_endpoint,
+                users::get_assignments_endpoint,
                 users::get_user_by_id_endpoint,
                 users::get_users_endpoint,
             ],

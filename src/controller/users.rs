@@ -55,6 +55,22 @@ pub async fn get_assignments_by_user_id_endpoint(
     controller::standardize_response_ok(assignments)
 }
 
+/// Endpoint for retrieving all assignments for the current user.
+///
+/// Requires authentication.
+/// 
+/// **GET /users/assignments**
+#[get("/users/assignments")]
+pub async fn get_assignments_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> TiraResponse<Vec<Assignment>> {
+    let user_id = controller::authentication(&conn, cookies).await?;
+    
+    let assignments = service::users::get_assignments_by_user_id(&conn, user_id).await;
+    controller::standardize_response_ok(assignments)
+}
+
 /// Endpoint for retrieving a user.
 ///
 /// **GET /users/<user_id>**
