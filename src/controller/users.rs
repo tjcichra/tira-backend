@@ -37,7 +37,10 @@ pub async fn create_user_endpoint(
     conn: TiraDbConn,
     user_json: Json<CreateUser>,
 ) -> TiraResponse<()> {
-    controller::standardize_response_ok(users::create_user(&conn, user_json.0).await)
+    let mut user_json = user_json.0;
+    user_json.password = service::security::sha256(&user_json.password);
+
+    controller::standardize_response_ok(users::create_user(&conn, user_json).await)
 }
 
 /// Endpoint for retrieving all assignments for a user.

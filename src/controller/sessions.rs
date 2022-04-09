@@ -21,7 +21,10 @@ pub async fn login_endpoint(
     cookies: &CookieJar<'_>,
     login_info: Json<Login>,
 ) -> TiraResponse<()> {
-    let uuid = controller::standardize_error_response(service::sessions::login(&conn, login_info.0).await)?;
+    let mut login_info = login_info.0;
+    login_info.password = service::security::sha256(&login_info.password);
+
+    let uuid = controller::standardize_error_response(service::sessions::login(&conn, login_info).await)?;
 
     cookies.add(Cookie::new(TIRA_AUTH_COOKIE, uuid));
     Ok(status::Custom(Status::Created, Json(())))

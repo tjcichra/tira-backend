@@ -1,15 +1,9 @@
-use std::{time::{Duration, SystemTime}, cmp::Ordering};
+use std::cmp::Ordering;
 
-use diesel::{result::Error, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
-use uuid::Uuid;
-
-use crate::{
-    controller::TiraMessage,
-    models::{Login, User},
-    TiraDbConn,
-};
+use crate::controller::TiraMessage;
 
 pub mod categories;
+pub mod security;
 pub mod sessions;
 pub mod tickets;
 pub mod users;

@@ -89,7 +89,6 @@ pub struct Ticket {
     pub status: String,
     pub priority: String,
     pub created: NaiveDateTime,
-    #[diesel(embedded)]
     pub reporter_id: i64,
 }
 
