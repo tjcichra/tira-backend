@@ -1,13 +1,12 @@
-use diesel::QueryResult;
 use uuid::Uuid;
 
 use crate::{TiraDbConn, dao, models::Login, service, controller::TiraMessage};
 
 /// Service function for retrieving user_id by session_uuid.
-pub async fn get_user_id_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<i64> {
-    let session = dao::sessions::get_session_from_session_uuid(conn, session_uuid).await?;
-    Ok(session.user_id)
-}
+// pub async fn get_user_id_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<i64> {
+//     let session = dao::sessions::get_session_from_session_uuid(conn, session_uuid).await?;
+//     Ok(session.user_id)
+// }
 
 /// Service function for performing a login.
 /// 

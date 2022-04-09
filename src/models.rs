@@ -59,6 +59,7 @@ pub mod create {
 pub struct User {
     pub id: i64,
     pub username: String,
+    #[serde(skip_serializing)]
     pub password: String,
     pub email_address: Option<String>,
     pub first_name: Option<String>,
@@ -88,6 +89,7 @@ pub struct Ticket {
     pub status: String,
     pub priority: String,
     pub created: NaiveDateTime,
+    #[diesel(embedded)]
     pub reporter_id: i64,
 }
 
