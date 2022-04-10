@@ -122,7 +122,11 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
 /// Endpoint for retrieving every ticket.
 ///
 /// **GET /tickets**
-#[get("/tickets")]
-pub async fn get_tickets_endpoint(conn: TiraDbConn) -> TiraResponse<Vec<Ticket>> {
-    controller::standardize_response_ok(tickets::get_tickets(&conn).await)
+///
+/// Query Parameters:
+/// 
+/// archived: Used to filter tickets that were reported by a certain user. Takes a number value. (optional)
+#[get("/tickets?<reporter>")]
+pub async fn get_tickets_endpoint(conn: TiraDbConn, reporter: Option<i64>) -> TiraResponse<Vec<Ticket>> {
+    controller::standardize_response_ok(tickets::get_tickets(&conn, reporter).await)
 }

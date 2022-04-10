@@ -1,5 +1,5 @@
 use crate::controller::TiraResponse;
-use crate::models::Assignment;
+use crate::models::{Assignment, Ticket};
 use crate::models::{create::CreateUser, User};
 use crate::service::{users, self};
 use crate::TiraDbConn;
@@ -66,9 +66,27 @@ pub async fn get_assignments_endpoint(
     cookies: &CookieJar<'_>,
 ) -> TiraResponse<Vec<Assignment>> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    
+
     let assignments = service::users::get_assignments_by_user_id(&conn, user_id).await;
     controller::standardize_response_ok(assignments)
+}
+
+/// Endpoint for retrieving all tickets reported by the current user.
+///
+/// Requires authentication.
+/// 
+/// **GET /users/tickets/reported**
+/// 
+/// TODO Change endpoint name
+#[get("/users/tickets/reported")]
+pub async fn get_tickets_reported_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> TiraResponse<Vec<Ticket>> {
+    let user_id = controller::authentication(&conn, cookies).await?;
+    
+    let tickets = service::tickets::get_tickets(&conn, Some(user_id)).await;
+    controller::standardize_response_ok(tickets)
 }
 
 /// Endpoint for retrieving a user.

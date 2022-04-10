@@ -48,6 +48,6 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> Result<Ticke
 }
 
 /// Service function for retrieving all tickets.
-pub async fn get_tickets(conn: &TiraDbConn) -> Result<Vec<Ticket>, QueryError> {
-    tickets::get_tickets(conn).await
+pub async fn get_tickets(conn: &TiraDbConn, filter_reporter_id: Option<i64>) -> Result<Vec<Ticket>, QueryError> {
+    tickets::get_tickets(conn, filter_reporter_id).await
 }

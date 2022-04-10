@@ -105,9 +105,11 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<
 }
 
 /// DAO function for retrieving all tickets.
-pub async fn get_tickets(conn: &TiraDbConn) -> QueryResult<Vec<Ticket>> {
+pub async fn get_tickets(conn: &TiraDbConn, filter_reporter_id: Option<i64>) -> QueryResult<Vec<Ticket>> {
     use crate::schema::tickets::dsl::*;
 
-    conn.run(|c| tickets.load::<Ticket>(c))
-        .await
+    match filter_reporter_id {
+        Some(filter_reporter_id) => conn.run(move |c| tickets.filter(reporter_id.eq(filter_reporter_id)).load(c)).await,
+        None => conn.run(|c| tickets.load(c)).await,
+    }
 }
