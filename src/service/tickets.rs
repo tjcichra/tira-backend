@@ -51,6 +51,20 @@ pub async fn create_ticket_by_reporter_id(
     ticket: CreateTicket,
     reporter_id: i64,
 ) -> Result<i64, Custom<Json<TiraMessage>>> {
+    if ticket.subject.is_empty() {
+        return Err(Custom(Status::BadRequest, Json(TiraMessage { message: "Subject can not be empty".to_string() })))
+    }
+
+    match ticket.status.as_str() {
+        "Backlog" | "In Progress" | "In Review" | "Done" | "Closed" => (),
+        _ => return Err(Custom(Status::BadRequest, Json(TiraMessage { message: "Status must be 'Backlog', 'In Progress', 'In Review', 'Done', or 'Closed'".to_string() })))
+    }
+
+    match ticket.priority.as_str() {
+        "Low" | "Medium" | "High" => (),
+        _ => return Err(Custom(Status::BadRequest, Json(TiraMessage { message: "Priority must be 'Low', 'Medium', or 'High'".to_string() })))
+    }
+
     dao::tickets::create_ticket_by_reporter_id(conn, ticket, reporter_id)
         .await
         .map_err(|e| Custom(Status::InternalServerError, Json(e.into())))
