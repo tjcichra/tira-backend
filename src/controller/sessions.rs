@@ -1,10 +1,10 @@
 use rocket::{
     http::{Cookie, CookieJar, SameSite, Status},
-    response::status,
+    response::status::{self, Custom},
     serde::json::Json,
 };
 
-use crate::controller::{self, TiraResponse, TIRA_AUTH_COOKIE};
+use crate::{controller::{self, TiraResponse, TIRA_AUTH_COOKIE, TiraMessage}, models::User};
 use crate::models::Login;
 use crate::service;
 use crate::TiraDbConn;
@@ -24,15 +24,15 @@ pub async fn login_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     login_info: Json<Login>,
-) -> TiraResponse<()> {
+) -> Result<Custom<Json<User>>, Custom<Json<TiraMessage>>> {
     let mut login_info = login_info.0;
     login_info.password = service::security::sha256(&login_info.password);
 
-    let uuid =
+    let uuid_and_user =
         controller::standardize_error_response(service::sessions::login(&conn, login_info).await)?;
 
-    cookies.add(Cookie::new(TIRA_AUTH_COOKIE, uuid));
-    Ok(status::Custom(Status::Created, Json(())))
+    cookies.add(Cookie::new(TIRA_AUTH_COOKIE, uuid_and_user.0));
+    Ok(status::Custom(Status::Created, Json(uuid_and_user.1)))
 }
 
 /// OPTIONS endpoint for login.

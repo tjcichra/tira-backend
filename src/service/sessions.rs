@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::{controller::TiraMessage, dao, models::Login, service, TiraDbConn};
+use crate::{controller::TiraMessage, dao, models::{Login, User}, service, TiraDbConn};
 
 /// Service function for retrieving user_id by session_uuid.
 // pub async fn get_user_id_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<i64> {
@@ -10,8 +10,8 @@ use crate::{controller::TiraMessage, dao, models::Login, service, TiraDbConn};
 
 /// Service function for performing a login.
 ///
-/// Returns the UUID for the newly created session.
-pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<String, TiraMessage> {
+/// Returns the UUID for the newly created session and user.
+pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<(String, User), TiraMessage> {
     let user = dao::users::get_user_by_username_and_password(conn, login_info).await?;
 
     let my_uuid = Uuid::new_v4();
@@ -23,7 +23,7 @@ pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<String, TiraM
     .await;
     service::check_only_one_row_changed(sessions_created)?;
 
-    Ok(my_uuid.to_string())
+    Ok((my_uuid.to_string(), user))
 }
 
 /// Service function for having a user log out.
