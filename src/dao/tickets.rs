@@ -50,7 +50,9 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
 }
 
 /// DAO function for creating a ticket by reporter id.
-pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id_parameter: i64) -> QueryResult<usize> {
+/// 
+/// Returns the id of the new ticket.
+pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id_parameter: i64) -> QueryResult<i64> {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
@@ -60,7 +62,8 @@ pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicke
                 created.eq(Utc::now().naive_utc()),
                 reporter_id.eq(reporter_id_parameter),
             ))
-            .execute(c)
+            .returning(id)
+            .get_result(c)
     })
     .await
 }

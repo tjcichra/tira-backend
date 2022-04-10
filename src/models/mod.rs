@@ -1,6 +1,8 @@
 use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
 
+pub mod success;
+
 pub mod create {
     use crate::schema::assignments;
     use crate::schema::categories;

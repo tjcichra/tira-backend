@@ -1,5 +1,6 @@
-use crate::{dao::tickets, TiraDbConn, models::{Ticket, create::{CreateComment, CreateTicket, CreateAssignmentWithUserId}, Assignment, Comment}, controller::TiraMessage, service};
+use crate::{dao::{tickets, self}, TiraDbConn, models::{Ticket, create::{CreateComment, CreateTicket, CreateAssignmentWithUserId}, Assignment, Comment, success::CreateTicketResponse}, controller::TiraMessage, service};
 use diesel::result::Error as QueryError;
+use rocket::{response::status::Custom, http::Status, serde::json::Json};
 
 /// Service function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
@@ -24,9 +25,8 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
 }
 
 /// Service function for creating a ticket by reporter id.
-pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id: i64) -> Result<(), TiraMessage> {
-    let tickets_created = tickets::create_ticket_by_reporter_id(conn, ticket, reporter_id).await;
-    service::check_only_one_row_changed(tickets_created)
+pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id: i64) -> Result<i64, Custom<Json<TiraMessage>>> {
+    dao::tickets::create_ticket_by_reporter_id(conn, ticket, reporter_id).await.map_err(|e| Custom(Status::InternalServerError, Json(e.into())))
 }
 
 /// Service function for retrieving assignments by ticket id.

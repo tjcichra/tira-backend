@@ -1,11 +1,13 @@
-use crate::controller::{self, TiraResponse};
+use crate::controller::{self, TiraResponse, TiraMessage};
+use crate::models::success::CreateTicketResponse;
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
     Assignment, Comment, Ticket,
 };
-use crate::service::tickets;
+use crate::service::{tickets, self};
 use crate::TiraDbConn;
 use rocket::http::{CookieJar, Status};
+use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 
 /// Endpoint for creating an assignment for a ticket.
@@ -79,14 +81,15 @@ pub async fn create_ticket_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_ticket_json: Json<CreateTicket>
-) -> TiraResponse<()> {
+) -> Result<Custom<Json<CreateTicketResponse>>, Custom<Json<TiraMessage>>> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(tickets::create_ticket_by_reporter_id(
+    
+    service::tickets::create_ticket_by_reporter_id(
         &conn,
         create_ticket_json.0,
         user_id
     )
-    .await, Status::Created)
+    .await.map(|id| Custom(Status::Created, Json(CreateTicketResponse {id})))
 }
 
 /// Endpoint for retrieving all assignments for a ticket.
