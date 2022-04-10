@@ -11,6 +11,8 @@ pub mod create {
     use crate::schema::users;
     use rocket::serde::Deserialize;
 
+    use super::Assignment;
+
     #[derive(Deserialize, Insertable)]
     #[table_name = "assignments"]
     #[serde(crate = "rocket::serde")]
@@ -33,8 +35,7 @@ pub mod create {
         pub content: String,
     }
 
-    #[derive(Deserialize, Insertable)]
-    #[table_name = "tickets"]
+    #[derive(Deserialize)]
     #[serde(crate = "rocket::serde")]
     pub struct CreateTicket {
         pub category_id: Option<i64>,
@@ -42,6 +43,7 @@ pub mod create {
         pub description: Option<String>,
         pub status: String,
         pub priority: String,
+        pub assignee_ids: Vec<i64>,
     }
 
     #[derive(Deserialize, Insertable)]

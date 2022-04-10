@@ -52,7 +52,7 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
     .await
 }
 
-/// DAO function for creating a ticket by reporter id.
+/// DAO function for creating a ticket by reporter id and assigning those tickets.
 ///
 /// Returns the id of the new ticket.
 pub async fn create_ticket_by_reporter_id(
@@ -60,17 +60,42 @@ pub async fn create_ticket_by_reporter_id(
     ticket: CreateTicket,
     reporter_id_parameter: i64,
 ) -> QueryResult<i64> {
-    use crate::schema::tickets::dsl::*;
-
     conn.run(move |c| {
-        diesel::insert_into(tickets)
-            .values((
-                &ticket,
-                created.eq(Utc::now().naive_utc()),
-                reporter_id.eq(reporter_id_parameter),
-            ))
-            .returning(id)
-            .get_result(c)
+        let ticket_id_parameter = {
+            use crate::schema::tickets::dsl::*;
+
+            diesel::insert_into(tickets)
+                .values((
+                    category_id.eq(ticket.category_id),
+                    subject.eq(ticket.subject),
+                    description.eq(ticket.description),
+                    status.eq(ticket.status),
+                    priority.eq(ticket.priority),
+                    created.eq(Utc::now().naive_utc()),
+                    reporter_id.eq(reporter_id_parameter),
+                ))
+                .returning(id)
+                .get_result(c)?
+        };
+
+        {
+            use crate::schema::assignments::dsl::*;
+
+            let assignments_parameter: Vec<_> = ticket.assignee_ids.iter().map(|assignee_id_parameter| {
+                (
+                    ticket_id.eq(ticket_id_parameter),
+                    assignee_id.eq(assignee_id_parameter),
+                    assigner_id.eq(reporter_id_parameter),
+                    assigned.eq(Utc::now().naive_utc())
+                )
+            }).collect();
+
+            diesel::insert_into(assignments)
+                .values(&assignments_parameter)
+                .execute(c)?;
+        }
+
+        Ok(ticket_id_parameter)
     })
     .await
 }
