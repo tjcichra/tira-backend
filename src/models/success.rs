@@ -3,5 +3,5 @@ use rocket::serde::Serialize;
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct CreateTicketResponse {
-    pub id: i64
+    pub id: i64,
 }

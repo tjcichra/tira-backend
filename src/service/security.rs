@@ -1,4 +1,4 @@
-use crypto::{sha2::Sha256, digest::Digest};
+use crypto::{digest::Digest, sha2::Sha256};
 
 /// Service function for putting a string through sha256
 pub fn sha256(password: &str) -> String {

@@ -1,7 +1,7 @@
 use crate::controller::TiraResponse;
-use crate::models::{Assignment, Ticket};
 use crate::models::{create::CreateUser, User};
-use crate::service::{users, self};
+use crate::models::{Assignment, Ticket};
+use crate::service::{self, users};
 use crate::TiraDbConn;
 use rocket::http::CookieJar;
 use rocket::serde::json::Json;
@@ -14,7 +14,11 @@ use crate::controller;
 ///
 /// **DELETE /users/<user_id>**
 #[delete("/users/<user_id>")]
-pub async fn archive_user_by_id_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, user_id: i64) -> TiraResponse<()> {
+pub async fn archive_user_by_id_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+    user_id: i64,
+) -> TiraResponse<()> {
     controller::authentication(&conn, cookies).await?;
     controller::standardize_response_ok(users::archive_user_by_id(&conn, user_id).await)
 }
@@ -49,7 +53,7 @@ pub async fn create_user_endpoint(
 #[get("/users/<user_id>/assignments")]
 pub async fn get_assignments_by_user_id_endpoint(
     conn: TiraDbConn,
-    user_id: i64
+    user_id: i64,
 ) -> TiraResponse<Vec<Assignment>> {
     let assignments = service::users::get_assignments_by_user_id(&conn, user_id).await;
     controller::standardize_response_ok(assignments)
@@ -58,7 +62,7 @@ pub async fn get_assignments_by_user_id_endpoint(
 /// Endpoint for retrieving all assignments for the current user.
 ///
 /// Requires authentication.
-/// 
+///
 /// **GET /users/assignments**
 #[get("/users/assignments")]
 pub async fn get_assignments_endpoint(
@@ -74,9 +78,9 @@ pub async fn get_assignments_endpoint(
 /// Endpoint for retrieving all tickets reported by the current user.
 ///
 /// Requires authentication.
-/// 
+///
 /// **GET /users/tickets/reported**
-/// 
+///
 /// TODO Change endpoint name
 #[get("/users/tickets/reported")]
 pub async fn get_tickets_reported_endpoint(
@@ -84,7 +88,7 @@ pub async fn get_tickets_reported_endpoint(
     cookies: &CookieJar<'_>,
 ) -> TiraResponse<Vec<Ticket>> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    
+
     let tickets = service::tickets::get_tickets(&conn, Some(user_id)).await;
     controller::standardize_response_ok(tickets)
 }
@@ -100,11 +104,14 @@ pub async fn get_user_by_id_endpoint(conn: TiraDbConn, user_id: i64) -> TiraResp
 /// Endpoint for retrieving every user.
 ///
 /// **GET /users**
-/// 
+///
 /// Query Parameters:
-/// 
+///
 /// archived: Used to filter users that are archived or not. Takes a boolean value. (optional)
 #[get("/users?<archived>")]
-pub async fn get_users_endpoint(conn: TiraDbConn, archived: Option<bool>) -> TiraResponse<Vec<User>> {
+pub async fn get_users_endpoint(
+    conn: TiraDbConn,
+    archived: Option<bool>,
+) -> TiraResponse<Vec<User>> {
     controller::standardize_response_ok(users::get_users(&conn, archived).await)
 }

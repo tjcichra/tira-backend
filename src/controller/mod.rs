@@ -4,10 +4,7 @@ pub mod tickets;
 pub mod users;
 
 use chrono::Utc;
-use diesel::{
-    result::{Error as QueryError},
-    ExpressionMethods, QueryDsl, RunQueryDsl,
-};
+use diesel::{result::Error as QueryError, ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::http::{CookieJar, Status};
 use rocket::response::{content, status};
 use rocket::{
@@ -70,7 +67,9 @@ fn standardize_response_ok<T, E: Into<TiraMessage>>(result: Result<T, E>) -> Tir
     standardize_response(result, Status::Ok)
 }
 
-fn standardize_error_response<T, E: Into<TiraMessage>>(result: Result<T, E>) -> Result<T, TiraErrorResponse> {
+fn standardize_error_response<T, E: Into<TiraMessage>>(
+    result: Result<T, E>,
+) -> Result<T, TiraErrorResponse> {
     result.map_err(|err| status::Custom(Status::InternalServerError, Json(err.into())))
 }
 
@@ -100,7 +99,9 @@ async fn authentication(
                         // Delete expired session
                         conn.run(|c| {
                             diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
-                        }).await.unwrap();
+                        })
+                        .await
+                        .unwrap();
 
                         // Return error message saying session has expired
                         Err(status::Custom(
@@ -112,7 +113,7 @@ async fn authentication(
                     } else {
                         Ok(session.user_id)
                     }
-                },
+                }
                 Err(error) => Err(status::Custom(Status::Forbidden, Json(error.into()))),
             }
         }

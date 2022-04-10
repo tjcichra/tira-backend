@@ -1,10 +1,10 @@
-use crate::controller::{self, TiraResponse, TiraMessage};
+use crate::controller::{self, TiraMessage, TiraResponse};
 use crate::models::success::CreateTicketResponse;
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
     Assignment, Comment, Ticket,
 };
-use crate::service::{tickets, self};
+use crate::service::{self, tickets};
 use crate::TiraDbConn;
 use rocket::http::{CookieJar, Status};
 use rocket::response::status::Custom;
@@ -26,11 +26,19 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_assignment_json: Json<CreateAssignmentWithUserId>,
-    ticket_id: i64
+    ticket_id: i64,
 ) -> TiraResponse<()> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(tickets::create_assignment_by_ticket_id_and_assigner_id(&conn, create_assignment_json.0, ticket_id, user_id)
-        .await, Status::Created)
+    controller::standardize_response(
+        tickets::create_assignment_by_ticket_id_and_assigner_id(
+            &conn,
+            create_assignment_json.0,
+            ticket_id,
+            user_id,
+        )
+        .await,
+        Status::Created,
+    )
 }
 
 /// Endpoint for creating a comment for a ticket.
@@ -49,16 +57,19 @@ pub async fn create_comment_by_ticket_id_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_comment_json: Json<CreateComment>,
-    ticket_id: i64
+    ticket_id: i64,
 ) -> TiraResponse<()> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(tickets::create_comment_by_ticket_id_and_commenter_id(
-        &conn,
-        create_comment_json.0,
-        ticket_id,
-        user_id
+    controller::standardize_response(
+        tickets::create_comment_by_ticket_id_and_commenter_id(
+            &conn,
+            create_comment_json.0,
+            ticket_id,
+            user_id,
+        )
+        .await,
+        Status::Created,
     )
-    .await, Status::Created)
 }
 
 /// Endpoint for creating a ticket.
@@ -80,16 +91,13 @@ pub async fn create_comment_by_ticket_id_endpoint(
 pub async fn create_ticket_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
-    create_ticket_json: Json<CreateTicket>
+    create_ticket_json: Json<CreateTicket>,
 ) -> Result<Custom<Json<CreateTicketResponse>>, Custom<Json<TiraMessage>>> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    
-    service::tickets::create_ticket_by_reporter_id(
-        &conn,
-        create_ticket_json.0,
-        user_id
-    )
-    .await.map(|id| Custom(Status::Created, Json(CreateTicketResponse {id})))
+
+    service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
+        .await
+        .map(|id| Custom(Status::Created, Json(CreateTicketResponse { id })))
 }
 
 /// Endpoint for retrieving all assignments for a ticket.
@@ -98,9 +106,11 @@ pub async fn create_ticket_endpoint(
 #[get("/tickets/<ticket_id>/assignments")]
 pub async fn get_assignments_by_ticket_id_endpoint(
     conn: TiraDbConn,
-    ticket_id: i64
+    ticket_id: i64,
 ) -> TiraResponse<Vec<Assignment>> {
-    controller::standardize_response_ok(tickets::get_assignments_by_ticket_id(&conn, ticket_id).await)
+    controller::standardize_response_ok(
+        tickets::get_assignments_by_ticket_id(&conn, ticket_id).await,
+    )
 }
 
 /// Endpoint for retrieving all comments for a ticket.
@@ -127,9 +137,12 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
 /// **GET /tickets**
 ///
 /// Query Parameters:
-/// 
+///
 /// archived: Used to filter tickets that were reported by a certain user. Takes a number value. (optional)
 #[get("/tickets?<reporter>")]
-pub async fn get_tickets_endpoint(conn: TiraDbConn, reporter: Option<i64>) -> TiraResponse<Vec<Ticket>> {
+pub async fn get_tickets_endpoint(
+    conn: TiraDbConn,
+    reporter: Option<i64>,
+) -> TiraResponse<Vec<Ticket>> {
     controller::standardize_response_ok(tickets::get_tickets(&conn, reporter).await)
 }

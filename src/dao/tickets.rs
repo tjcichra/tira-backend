@@ -1,8 +1,11 @@
-use chrono::Utc;
 use crate::{
-    models::{create::{CreateTicket, CreateComment, CreateAssignmentWithUserId}, Assignment, Comment, Ticket},
+    models::{
+        create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
+        Assignment, Comment, Ticket,
+    },
     TiraDbConn,
 };
+use chrono::Utc;
 use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 /// DAO function for creating an assignment by ticket id and assigner id.
@@ -10,7 +13,7 @@ pub async fn create_assignment_by_ticket_id_and_assigner_id(
     conn: &TiraDbConn,
     assignee_id_parameter: CreateAssignmentWithUserId,
     ticket_id_parameter: i64,
-    assigner_id_parameter: i64
+    assigner_id_parameter: i64,
 ) -> QueryResult<usize> {
     use crate::schema::assignments::dsl::*;
 
@@ -50,9 +53,13 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
 }
 
 /// DAO function for creating a ticket by reporter id.
-/// 
+///
 /// Returns the id of the new ticket.
-pub async fn create_ticket_by_reporter_id(conn: &TiraDbConn, ticket: CreateTicket, reporter_id_parameter: i64) -> QueryResult<i64> {
+pub async fn create_ticket_by_reporter_id(
+    conn: &TiraDbConn,
+    ticket: CreateTicket,
+    reporter_id_parameter: i64,
+) -> QueryResult<i64> {
     use crate::schema::tickets::dsl::*;
 
     conn.run(move |c| {
@@ -84,7 +91,10 @@ pub async fn get_assignments_by_ticket_id(
 }
 
 /// DAO function for retrieving comments by ticket id.
-pub async fn get_comments_by_ticket_id(conn: &TiraDbConn, ticket_id_parameter: i64) -> QueryResult<Vec<Comment>> {
+pub async fn get_comments_by_ticket_id(
+    conn: &TiraDbConn,
+    ticket_id_parameter: i64,
+) -> QueryResult<Vec<Comment>> {
     use crate::schema::comments::dsl::*;
 
     conn.run(move |c| {
@@ -99,20 +109,22 @@ pub async fn get_comments_by_ticket_id(conn: &TiraDbConn, ticket_id_parameter: i
 pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<Ticket> {
     use crate::schema::tickets::dsl::*;
 
-    conn.run(move |c| {
-        tickets
-            .filter(id.eq(ticket_id))
-            .first::<Ticket>(c)
-    })
-    .await
+    conn.run(move |c| tickets.filter(id.eq(ticket_id)).first::<Ticket>(c))
+        .await
 }
 
 /// DAO function for retrieving all tickets.
-pub async fn get_tickets(conn: &TiraDbConn, filter_reporter_id: Option<i64>) -> QueryResult<Vec<Ticket>> {
+pub async fn get_tickets(
+    conn: &TiraDbConn,
+    filter_reporter_id: Option<i64>,
+) -> QueryResult<Vec<Ticket>> {
     use crate::schema::tickets::dsl::*;
 
     match filter_reporter_id {
-        Some(filter_reporter_id) => conn.run(move |c| tickets.filter(reporter_id.eq(filter_reporter_id)).load(c)).await,
+        Some(filter_reporter_id) => {
+            conn.run(move |c| tickets.filter(reporter_id.eq(filter_reporter_id)).load(c))
+                .await
+        }
         None => conn.run(|c| tickets.load(c)).await,
     }
 }

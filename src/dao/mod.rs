@@ -1,5 +1,3 @@
-
-
 pub mod categories;
 pub mod sessions;
 pub mod tickets;

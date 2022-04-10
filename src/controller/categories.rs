@@ -17,7 +17,9 @@ pub async fn archive_category_by_id_endpoint(
     category_id: i64,
 ) -> TiraResponse<()> {
     controller::authentication(&conn, cookies).await?;
-    controller::standardize_response_ok(categories::archive_category_by_id(&conn, category_id).await)
+    controller::standardize_response_ok(
+        categories::archive_category_by_id(&conn, category_id).await,
+    )
 }
 
 /// Endpoint for creating a category.
@@ -41,19 +43,22 @@ pub async fn create_category_endpoint(
     let user_id = controller::authentication(&conn, cookies).await?;
     controller::standardize_response(
         categories::create_category(&conn, create_category_json.0, user_id).await,
-        Status::Created
+        Status::Created,
     )
 }
 
 /// Endpoint for retrieving every category.
 ///
 /// **GET /categories**
-/// 
+///
 /// Query Parameters:
-/// 
+///
 /// archived: Used to filter categories that are archived or not. Takes a boolean value. (optional)
 #[get("/categories?<archived>")]
-pub async fn get_categories_endpoint(conn: TiraDbConn, archived: Option<bool>) -> TiraResponse<Vec<Category>> {
+pub async fn get_categories_endpoint(
+    conn: TiraDbConn,
+    archived: Option<bool>,
+) -> TiraResponse<Vec<Category>> {
     controller::standardize_response_ok(categories::get_categories(&conn, archived).await)
 }
 

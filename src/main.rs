@@ -1,10 +1,15 @@
 use crate::controller::{categories, sessions, tickets, users};
 use diesel::PgConnection;
 use dotenv::dotenv;
-use rocket::{figment::{
-    map,
-    value::{Map, Value},
-}, fairing::{Fairing, Info, Kind}, http::Header, Request, Response};
+use rocket::{
+    fairing::{Fairing, Info, Kind},
+    figment::{
+        map,
+        value::{Map, Value},
+    },
+    http::Header,
+    Request, Response,
+};
 use rocket_sync_db_pools::database;
 use std::env;
 
@@ -29,13 +34,19 @@ impl Fairing for CORS {
     fn info(&self) -> rocket::fairing::Info {
         Info {
             name: "Add CORS headers to responses",
-            kind: Kind::Response
+            kind: Kind::Response,
         }
     }
 
     async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "http://localhost:3000"));
-        response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Origin",
+            "http://localhost:3000",
+        ));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, PUT, DELETE, OPTIONS",
+        ));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }

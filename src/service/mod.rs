@@ -18,8 +18,12 @@ pub fn check_only_one_row_changed<E: Into<TiraMessage>>(
 
     match rows_affected.cmp(&1) {
         Ordering::Equal => Ok(()),
-        Ordering::Less => Err(TiraMessage { message: "No row was affected".to_string() }),
-        Ordering::Greater => Err(TiraMessage { message: "More than one row was affected".to_string() }),
+        Ordering::Less => Err(TiraMessage {
+            message: "No row was affected".to_string(),
+        }),
+        Ordering::Greater => Err(TiraMessage {
+            message: "More than one row was affected".to_string(),
+        }),
     }
 }
 
@@ -32,7 +36,9 @@ pub fn check_at_least_one_row_changed<E: Into<TiraMessage>>(
     };
 
     if rows_affected <= 0 {
-        Err(TiraMessage { message: "No row was affected".to_string() })
+        Err(TiraMessage {
+            message: "No row was affected".to_string(),
+        })
     } else {
         Ok(())
     }

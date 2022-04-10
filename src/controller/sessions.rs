@@ -1,6 +1,10 @@
-use rocket::{http::{Cookie, CookieJar, Status, SameSite}, serde::json::Json, response::status};
+use rocket::{
+    http::{Cookie, CookieJar, SameSite, Status},
+    response::status,
+    serde::json::Json,
+};
 
-use crate::controller::{self, TIRA_AUTH_COOKIE, TiraResponse};
+use crate::controller::{self, TiraResponse, TIRA_AUTH_COOKIE};
 use crate::models::Login;
 use crate::service;
 use crate::TiraDbConn;
@@ -24,7 +28,8 @@ pub async fn login_endpoint(
     let mut login_info = login_info.0;
     login_info.password = service::security::sha256(&login_info.password);
 
-    let uuid = controller::standardize_error_response(service::sessions::login(&conn, login_info).await)?;
+    let uuid =
+        controller::standardize_error_response(service::sessions::login(&conn, login_info).await)?;
 
     cookies.add(Cookie::new(TIRA_AUTH_COOKIE, uuid));
     Ok(status::Custom(Status::Created, Json(())))
@@ -40,10 +45,7 @@ pub async fn login_options_endpoint() {}
 ///
 /// Requires authentication.
 #[post("/logout")]
-pub async fn logout_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>
-) -> TiraResponse<()> {
+pub async fn logout_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>) -> TiraResponse<()> {
     let user_id = controller::authentication(&conn, cookies).await?;
     controller::standardize_error_response(service::sessions::logout(&conn, user_id).await)?;
 
