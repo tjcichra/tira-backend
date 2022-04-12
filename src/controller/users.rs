@@ -76,14 +76,17 @@ pub async fn get_assignments_endpoint(
 }
 
 /// Endpoint for retrieving the current user.
-/// 
+///
 /// Requires authentication.
 ///
 /// **GET /users/current**
 #[get("/users/current")]
-pub async fn get_current_user_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>) -> TiraResponse<User> {
+pub async fn get_current_user_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> TiraResponse<User> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    
+
     controller::standardize_response_ok(users::get_user_by_id(&conn, user_id).await)
 }
 

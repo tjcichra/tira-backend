@@ -4,10 +4,13 @@ use rocket::{
     serde::json::Json,
 };
 
-use crate::{controller::{self, TiraResponse, TIRA_AUTH_COOKIE, TiraMessage}, models::User};
 use crate::models::Login;
 use crate::service;
 use crate::TiraDbConn;
+use crate::{
+    controller::{self, TiraMessage, TiraResponse, TIRA_AUTH_COOKIE},
+    models::User,
+};
 
 /// Endpoint for login.
 ///

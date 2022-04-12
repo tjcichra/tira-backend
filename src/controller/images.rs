@@ -14,8 +14,8 @@ pub async fn upload_image_endpoint(
     data: Data<'_>,
 ) -> std::io::Result<()> {
     let tim = data.open(8.megabytes()).into_bytes().await?;
-        // .stream_to(tokio::io::stdout())
-    
+    // .stream_to(tokio::io::stdout())
+
     if !tim.is_complete() {
         println!("there are bytes remaining in the stream");
     }

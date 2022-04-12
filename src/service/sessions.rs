@@ -1,6 +1,11 @@
 use uuid::Uuid;
 
-use crate::{controller::TiraMessage, dao, models::{Login, User}, service, TiraDbConn};
+use crate::{
+    controller::TiraMessage,
+    dao,
+    models::{Login, User},
+    service, TiraDbConn,
+};
 
 /// Service function for retrieving user_id by session_uuid.
 // pub async fn get_user_id_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<i64> {

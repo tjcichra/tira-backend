@@ -81,14 +81,18 @@ pub async fn create_ticket_by_reporter_id(
         {
             use crate::schema::assignments::dsl::*;
 
-            let assignments_parameter: Vec<_> = ticket.assignee_ids.iter().map(|assignee_id_parameter| {
-                (
-                    ticket_id.eq(ticket_id_parameter),
-                    assignee_id.eq(assignee_id_parameter),
-                    assigner_id.eq(reporter_id_parameter),
-                    assigned.eq(Utc::now().naive_utc())
-                )
-            }).collect();
+            let assignments_parameter: Vec<_> = ticket
+                .assignee_ids
+                .iter()
+                .map(|assignee_id_parameter| {
+                    (
+                        ticket_id.eq(ticket_id_parameter),
+                        assignee_id.eq(assignee_id_parameter),
+                        assigner_id.eq(reporter_id_parameter),
+                        assigned.eq(Utc::now().naive_utc()),
+                    )
+                })
+                .collect();
 
             diesel::insert_into(assignments)
                 .values(&assignments_parameter)
