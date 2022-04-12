@@ -1,4 +1,4 @@
-use crate::controller::{categories, sessions, tickets, users};
+use crate::controller::{categories, images, sessions, tickets, users};
 use diesel::PgConnection;
 use dotenv::dotenv;
 use rocket::{
@@ -77,6 +77,8 @@ fn rocket() -> _ {
                 categories::create_category_endpoint,
                 categories::get_categories_endpoint,
                 categories::get_category_by_id_endpoint,
+                images::retrieve_image_endpoint,
+                images::upload_image_endpoint,
                 sessions::login_endpoint,
                 sessions::login_options_endpoint,
                 sessions::logout_endpoint,

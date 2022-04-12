@@ -1,4 +1,5 @@
 pub mod categories;
+pub mod images;
 pub mod sessions;
 pub mod tickets;
 pub mod users;
@@ -23,7 +24,7 @@ pub type TiraErrorResponse = status::Custom<Json<TiraMessage>>;
 
 pub type TiraResponse<T> = Result<TiraSuccessResponse<T>, TiraErrorResponse>;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct TiraMessage {
     pub message: String,

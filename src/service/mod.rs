@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use crate::controller::TiraMessage;
 
 pub mod categories;
+pub mod images;
 pub mod security;
 pub mod sessions;
 pub mod tickets;
