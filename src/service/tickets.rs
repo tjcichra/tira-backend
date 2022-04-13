@@ -4,7 +4,7 @@ use crate::{
     models::{
         create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
         success::CreateTicketResponse,
-        Assignment, Comment, Ticket,
+        Assignment, Comment, Ticket, TicketWithoutDescription,
     },
     service, TiraDbConn,
 };
@@ -116,6 +116,6 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> Result<Ticke
 pub async fn get_tickets(
     conn: &TiraDbConn,
     filter_reporter_id: Option<i64>,
-) -> Result<Vec<Ticket>, QueryError> {
+) -> Result<Vec<TicketWithoutDescription>, QueryError> {
     tickets::get_tickets(conn, filter_reporter_id).await
 }

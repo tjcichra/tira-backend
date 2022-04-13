@@ -96,6 +96,20 @@ pub struct Ticket {
     pub reporter_id: i64,
 }
 
+#[derive(Queryable, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct TicketWithoutDescription {
+    pub id: i64,
+    pub category_id: Option<i64>,
+    pub subject: String,
+    #[serde(skip_serializing)]
+    pub description: Option<String>,
+    pub status: String,
+    pub priority: String,
+    pub created: NaiveDateTime,
+    pub reporter_id: i64,
+}
+
 #[derive(Queryable, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Assignment {

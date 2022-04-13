@@ -1,4 +1,5 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
+use crate::models::TicketWithoutDescription;
 use crate::models::success::CreateTicketResponse;
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
@@ -143,6 +144,6 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
 pub async fn get_tickets_endpoint(
     conn: TiraDbConn,
     reporter: Option<i64>,
-) -> TiraResponse<Vec<Ticket>> {
+) -> TiraResponse<Vec<TicketWithoutDescription>> {
     controller::standardize_response_ok(tickets::get_tickets(&conn, reporter).await)
 }

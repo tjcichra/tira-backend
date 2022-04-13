@@ -1,6 +1,6 @@
 use crate::controller::TiraResponse;
 use crate::models::{create::CreateUser, User};
-use crate::models::{Assignment, Ticket};
+use crate::models::{Assignment, Ticket, TicketWithoutDescription};
 use crate::service::{self, users};
 use crate::TiraDbConn;
 use rocket::http::CookieJar;
@@ -101,7 +101,7 @@ pub async fn get_current_user_endpoint(
 pub async fn get_tickets_reported_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
-) -> TiraResponse<Vec<Ticket>> {
+) -> TiraResponse<Vec<TicketWithoutDescription>> {
     let user_id = controller::authentication(&conn, cookies).await?;
 
     let tickets = service::tickets::get_tickets(&conn, Some(user_id)).await;

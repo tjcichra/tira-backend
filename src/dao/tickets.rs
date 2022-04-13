@@ -1,7 +1,7 @@
 use crate::{
     models::{
         create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-        Assignment, Comment, Ticket,
+        Assignment, Comment, Ticket, TicketWithoutDescription,
     },
     TiraDbConn,
 };
@@ -146,7 +146,7 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<
 pub async fn get_tickets(
     conn: &TiraDbConn,
     filter_reporter_id: Option<i64>,
-) -> QueryResult<Vec<Ticket>> {
+) -> QueryResult<Vec<TicketWithoutDescription>> {
     use crate::schema::tickets::dsl::*;
 
     match filter_reporter_id {
