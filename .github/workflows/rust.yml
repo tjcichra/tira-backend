@@ -106,7 +106,7 @@ jobs:
         with:
           name: tira-backend
           url: https://kaniko.jrcichra.dev
-          context: "git://github.com/tjcichra/tira_backend"
+          context: "git://github.com/tjcichra/tira-backend#${{ github.sha }}"
           destination: "ghcr.io/tjcichra/tira_backend:sha-${{ steps.vars.outputs.sha_short }}-arm64"
           secret: tim-ghcr-io
           arch: arm64
