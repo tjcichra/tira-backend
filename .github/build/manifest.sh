@@ -2,7 +2,7 @@
 set -x
 
 # env vars
-export TIRA_SHA="sha-${TIRA_SHA::8}"
+export TIRA_SHA="sha-${TIRA_SHA::7}"
 # pull the containers
 docker pull ghcr.io/tjcichra/tira_backend:${TIRA_SHA}-amd64
 docker pull ghcr.io/tjcichra/tira_backend:${TIRA_SHA}-arm64
