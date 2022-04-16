@@ -1,7 +1,0 @@
-{
-  "name": "tira-backend-${TIRA_ARCH}-${TIRA_SHA}-${EPOCH}",
-  "context": "git://github.com/tjcichra/tira-backend",
-  "destination": "ghcr.io/tjcichra/tira_backend:${TIRA_SHA}-${TIRA_ARCH}",
-  "secret" : "tim-ghcr-io",
-  "arch": "arm64"
-}
