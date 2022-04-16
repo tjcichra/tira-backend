@@ -112,7 +112,7 @@ jobs:
           arch: arm64
           headers: |
             {
-              "CF-Access-Client-Id" : "93a12e585dcfcf01442b6c75444a228b.access",
+              "CF-Access-Client-Id" : "46ea1be6ad585778416864f114d5cff1.access",
               "CF-Access-Client-Secret" : "${{ secrets.ORACLE_K8S_ACCESS_TOKEN }}"
             }
 
