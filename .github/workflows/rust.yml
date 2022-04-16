@@ -104,7 +104,7 @@ jobs:
         id: dispatch
         uses: jrcichra/kaniko-dispatcher@main
         with:
-          name: email-fanout
+          name: tira-backend
           url: https://kaniko.jrcichra.dev
           context: "git://github.com/tjcichra/tira_backend"
           destination: "ghcr.io/tjcichra/tira_backend:sha-${{ steps.vars.outputs.sha_short }}-arm64"
