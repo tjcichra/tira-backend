@@ -1,5 +1,6 @@
 FROM ghcr.io/jrcichra/sccache-rust:sha-959b66f as builder
 WORKDIR /usr/src/app
+RUN env
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN cargo build --release
