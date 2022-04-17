@@ -1,16 +1,16 @@
 FROM ghcr.io/jrcichra/sccache-rust:sha-959b66f as builder
+ARG SCCACHE_BUCKET
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG SCCACHE_REGION
+ARG SCCACHE_ENDPOINT
+ARG RUSTC_WRAPPER
+ARG SCCACHE_LOG
+ARG SCCACHE_ERROR_LOG
 WORKDIR /usr/src/app
-ENV SCCACHE_BUCKET=${SCCACHE_BUCKET} \
-    AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-    AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    SCCACHE_REGION=${SCCACHE_REGION} \
-    SCCACHE_ENDPOINT=${SCCACHE_ENDPOINT} \
-    RUSTC_WRAPPER=${RUSTC_WRAPPER} \
-    SCCACHE_LOG=${SCCACHE_LOG} \
-    SCCACHE_ERROR_LOG=${SCCACHE_ERROR_LOG}
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY . .
-RUN cargo build --release
+RUN printenv && cargo build --release
 
 FROM debian:bullseye-20220328-slim
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
