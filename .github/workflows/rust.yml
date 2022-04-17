@@ -32,7 +32,7 @@ jobs:
           destination: "ghcr.io/tjcichra/tira_backend:sha-${{ steps.vars.outputs.sha_short }}-amd64"
           secret: tim-ghcr-io
           arch: amd64
-          build-args: |
+          build_args: |
             {
               "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
               "SCCACHE_BUCKET": "sccache",
@@ -70,8 +70,9 @@ jobs:
           destination: "ghcr.io/tjcichra/tira_backend:sha-${{ steps.vars.outputs.sha_short }}-arm64"
           secret: tim-ghcr-io
           arch: arm64
-          build-args: |
+          build_args: |
             {
+              "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
               "SCCACHE_BUCKET": "sccache",
               "AWS_ACCESS_KEY_ID": "github",
               "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
