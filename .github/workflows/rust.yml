@@ -35,10 +35,11 @@ jobs:
           build_args: |
             {
               "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
-              "SCCACHE_BUCKET": "sccache",
+              "SCCACHE_BUCKET": "sccache-amd64",
               "AWS_ACCESS_KEY_ID": "github",
               "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
-              "SCCACHE_ENDPOINT": "http://minio.minio:9000"
+              "SCCACHE_ENDPOINT": "https://minio.jrcichra.dev",
+              "SCCACHE_LOG": "debug"
             }
           headers: |
             {
@@ -73,10 +74,11 @@ jobs:
           build_args: |
             {
               "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
-              "SCCACHE_BUCKET": "sccache",
+              "SCCACHE_BUCKET": "sccache-arm64",
               "AWS_ACCESS_KEY_ID": "github",
               "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
-              "SCCACHE_ENDPOINT": "http://minio.minio:9000"
+              "SCCACHE_ENDPOINT": "https://minio.jrcichra.dev",
+              "SCCACHE_LOG": "debug"
             }
           headers: |
             {
