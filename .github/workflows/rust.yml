@@ -110,6 +110,13 @@ jobs:
           destination: "ghcr.io/tjcichra/tira_backend:sha-${{ steps.vars.outputs.sha_short }}-arm64"
           secret: tim-ghcr-io
           arch: arm64
+          build-args: |
+            {
+              "SCCACHE_BUCKET": "sccache",
+              "AWS_ACCESS_KEY_ID": "github",
+              "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
+              "SCCACHE_ENDPOINT": "http://minio.minio:9000"
+            }
           headers: |
             {
               "CF-Access-Client-Id" : "46ea1be6ad585778416864f114d5cff1.access",

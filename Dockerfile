@@ -1,4 +1,4 @@
-FROM rust:1.60-slim-bullseye as builder
+FROM ghcr.io/jrcichra/sccache-rust:sha-337af9f as builder
 WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY . .
