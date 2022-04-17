@@ -34,12 +34,14 @@ jobs:
           arch: amd64
           build_args: |
             {
-              "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
               "SCCACHE_BUCKET": "sccache-amd64",
               "AWS_ACCESS_KEY_ID": "github",
               "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
+              "SCCACHE_REGION" : "oracle",
               "SCCACHE_ENDPOINT": "https://minio.jrcichra.dev",
-              "SCCACHE_LOG": "debug"
+              "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
+              "SCCACHE_LOG": "debug",
+              "SCCACHE_ERROR_LOG" : "/tmp/sccache_log.txt"
             }
           headers: |
             {
@@ -73,12 +75,14 @@ jobs:
           arch: arm64
           build_args: |
             {
-              "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
               "SCCACHE_BUCKET": "sccache-arm64",
               "AWS_ACCESS_KEY_ID": "github",
               "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_SECRET_ACCESS_KEY }}",
+              "SCCACHE_REGION" : "oracle",
               "SCCACHE_ENDPOINT": "https://minio.jrcichra.dev",
-              "SCCACHE_LOG": "debug"
+              "RUSTC_WRAPPER" : "/usr/local/bin/sccache",
+              "SCCACHE_LOG": "debug",
+              "SCCACHE_ERROR_LOG" : "/tmp/sccache_log.txt"
             }
           headers: |
             {

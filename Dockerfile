@@ -10,7 +10,7 @@ ARG SCCACHE_ERROR_LOG
 WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY . .
-RUN printenv && cargo build --release
+RUN (touch /tmp/sccache_log.txt && tail -f /tmp/sccache_log.txt &) && printenv && cargo build --release
 
 FROM debian:bullseye-20220328-slim
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
