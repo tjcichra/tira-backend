@@ -24,8 +24,15 @@ pub async fn create_session_by_session_uuid_and_user_id(
     conn: &TiraDbConn,
     session_uuid: String,
     user_id_parameter: i64,
+    remember_me: bool
 ) -> QueryResult<String> {
     use crate::schema::sessions::dsl::*;
+
+    let expiration_parameter = if remember_me {
+        None
+    } else {
+        Some(expiration.eq(SystemTime::now() + Duration::from_secs(30 * 60))) //TODO: Fix this
+    };
 
     conn.run(move |c| {
         diesel::insert_into(sessions)
@@ -33,7 +40,7 @@ pub async fn create_session_by_session_uuid_and_user_id(
                 uuid.eq(session_uuid),
                 user_id.eq(user_id_parameter),
                 created.eq(Utc::now().naive_utc()),
-                expiration.eq(SystemTime::now() + Duration::from_secs(30 * 60)), //TODO: Fix this
+                expiration_parameter,
             ))
             .returning(uuid)
             .get_result(c)

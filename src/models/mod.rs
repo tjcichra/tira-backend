@@ -139,7 +139,7 @@ pub struct Session {
     pub uuid: String,
     pub user_id: i64,
     pub created: NaiveDateTime,
-    pub expiration: NaiveDateTime,
+    pub expiration: Option<NaiveDateTime>,
 }
 
 #[derive(Deserialize)]
@@ -147,4 +147,5 @@ pub struct Session {
 pub struct Login {
     pub username: String,
     pub password: String,
+    pub remember_me: bool,
 }

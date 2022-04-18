@@ -29,11 +29,17 @@ pub async fn login_endpoint(
 ) -> TiraResponse<User> {
     let mut login_info = login_info.0;
     login_info.password = service::security::sha256(&login_info.password);
+    let remember_me = login_info.remember_me;
 
     let uuid_and_user = service::sessions::login(&conn, login_info).await?;
 
-    let mut expiration = OffsetDateTime::now_utc();
-    expiration += Duration::hour();
+    let expiration = if remember_me {
+        None
+    } else {
+        let mut expiration = OffsetDateTime::now_utc();
+        expiration += Duration::hour();
+        Some(expiration)
+    };
 
     let cookie = Cookie::build(TIRA_AUTH_COOKIE, uuid_and_user.0).expires(expiration).finish();
     cookies.add(cookie);

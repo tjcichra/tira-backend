@@ -34,7 +34,7 @@ table! {
         uuid -> Text,
         user_id -> Int8,
         created -> Timestamp,
-        expiration -> Timestamp,
+        expiration -> Nullable<Timestamp>,
     }
 }
 

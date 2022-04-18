@@ -121,23 +121,28 @@ async fn authentication(
 
             match session {
                 Ok(session) => {
-                    if Utc::now().naive_utc() > session.expiration {
-                        // Delete expired session
-                        conn.run(|c| {
-                            diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
-                        })
-                        .await
-                        .unwrap();
+                    match session.expiration {
+                        Some(exp) => {
+                            if Utc::now().naive_utc() > exp {
+                                // Delete expired session
+                                conn.run(|c| {
+                                    diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
+                                })
+                                .await
+                                .unwrap();
 
-                        // Return error message saying session has expired
-                        Err(status::Custom(
-                            Status::Forbidden,
-                            Json(TiraMessage {
-                                message: "Session has expired, please log in again.".to_string(),
-                            }),
-                        ))
-                    } else {
-                        Ok(session.user_id)
+                                // Return error message saying session has expired
+                                Err(status::Custom(
+                                    Status::Forbidden,
+                                    Json(TiraMessage {
+                                        message: "Session has expired, please log in again.".to_string(),
+                                    }),
+                                ))
+                            } else {
+                                Ok(session.user_id)
+                            }
+                        },
+                        None => Ok(session.user_id),
                     }
                 }
                 Err(error) => Err(status::Custom(Status::Forbidden, Json(error.into()))),

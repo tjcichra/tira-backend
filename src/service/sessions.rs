@@ -17,6 +17,7 @@ use crate::{
 ///
 /// Returns the UUID for the newly created session and user.
 pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<(String, User), TiraErrorResponse> {
+    let remember_me = login_info.remember_me;
     let user = dao::users::get_user_by_username_and_password(conn, login_info).await.map_err(controller::convert)?;
 
     let my_uuid = Uuid::new_v4();
@@ -24,6 +25,7 @@ pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<(String, User
         conn,
         my_uuid.to_string(),
         user.id,
+        remember_me
     )
     .await.map_err(controller::convert)?;
 
