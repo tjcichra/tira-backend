@@ -1,8 +1,16 @@
-FROM rust:1.60-slim-bullseye as builder
+FROM ghcr.io/jrcichra/sccache-rust:sha-959b66f as builder
+ARG SCCACHE_BUCKET
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG SCCACHE_REGION
+ARG SCCACHE_ENDPOINT
+ARG RUSTC_WRAPPER
+ARG SCCACHE_LOG
+ARG SCCACHE_ERROR_LOG
 WORKDIR /usr/src/app
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY . .
-RUN cargo build --release
+RUN (touch /tmp/sccache_log.txt && tail -f /tmp/sccache_log.txt &) && printenv && cargo build --release -j8
 
 FROM debian:bullseye-20220328-slim
 RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
