@@ -97,6 +97,7 @@ fn rocket() -> _ {
                 users::get_tickets_reported_endpoint,
                 users::get_user_by_id_endpoint,
                 users::get_users_endpoint,
+                users::patch_user_by_id_endpoint
             ],
         )
         .register("/", catchers![controller::not_found])

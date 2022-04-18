@@ -2,7 +2,8 @@ use crate::controller::TiraResponse;
 use crate::models::success::AlteredResourceResponse;
 use crate::models::{create::CreateUser, User};
 use crate::models::{Assignment, TicketWithoutDescription};
-use crate::service::{self, users};
+use crate::models::patch::UpdateUser;
+use crate::service;
 use crate::TiraDbConn;
 use rocket::http::{CookieJar, Status};
 use rocket::serde::json::Json;
@@ -125,4 +126,16 @@ pub async fn get_users_endpoint(
 ) -> TiraResponse<Vec<User>> {
     let users = service::users::get_users(&conn, archived).await?;
     Ok(controller::create_success_response_ok(users))
+}
+
+/// Endpoint for updating a user.
+///
+/// **PATCH /users/<user_id>**
+#[patch("/users/<user_id>", data = "<update_user_json>")]
+pub async fn patch_user_by_id_endpoint(conn: TiraDbConn, update_user_json: Json<UpdateUser>, user_id: i64) -> TiraResponse<AlteredResourceResponse> {
+    service::users::update_user_by_id(&conn, update_user_json.0, user_id).await?;
+
+    let message = format!("Successfully edited user!");
+    let response = AlteredResourceResponse { message, id: user_id };
+    Ok(controller::create_success_response_ok(response))
 }

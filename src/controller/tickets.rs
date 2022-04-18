@@ -155,7 +155,7 @@ pub async fn get_tickets_endpoint(
     Ok(controller::create_success_response_ok(tickets))
 }
 
-/// Endpoint for upating a ticket.
+/// Endpoint for updating a ticket.
 ///
 /// **PATCH /tickets/<ticket_id>**
 #[patch("/tickets/<ticket_id>", data = "<update_ticket_json>")]
@@ -164,5 +164,5 @@ pub async fn patch_ticket_by_id_endpoint(conn: TiraDbConn, update_ticket_json: J
 
     let message = format!("Successfully edited ticket!");
     let response = AlteredResourceResponse { message, id: ticket_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    Ok(controller::create_success_response_ok(response))
 }

@@ -59,6 +59,7 @@ table! {
         email_address -> Nullable<Text>,
         first_name -> Nullable<Text>,
         last_name -> Nullable<Text>,
+        profile_picture_url -> Nullable<Text>,
         created -> Timestamp,
         archived -> Bool,
     }

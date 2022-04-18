@@ -1,7 +1,7 @@
 use crate::{
     controller::{self, TiraErrorResponse},
     dao,
-    models::{Assignment, create::CreateUser, User},
+    models::{Assignment, create::CreateUser, User, patch::{UpdateTicket, UpdateUser}},
     service, TiraDbConn,
 };
 
@@ -31,4 +31,10 @@ pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> Result<User, Tir
 
 pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> Result<Vec<User>, TiraErrorResponse> {
     dao::users::get_users(conn, filter_archived).await.map_err(controller::convert)
+}
+
+/// Service function for updating a user by id.
+pub async fn update_user_by_id(conn: &TiraDbConn, user: UpdateUser, user_id: i64) -> Result<(), TiraErrorResponse> {
+    let users_updated = dao::users::update_user_by_id(conn, user, user_id).await.map_err(controller::convert)?;
+    service::check_only_one_row_changed(users_updated)
 }
