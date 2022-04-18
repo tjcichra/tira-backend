@@ -14,4 +14,5 @@ diesel = { version = "1.4.8", features = ["chrono", "postgres"] }
 dotenv = "0.15.0"
 rocket_sync_db_pools = { version = "0.1.0-rc.1", default-features = false, features = ["diesel_postgres_pool"] }
 rust-crypto = "0.2.36"
+time = "0.2.11"
 uuid = { version = "0.8.2", features = ["v4"] }

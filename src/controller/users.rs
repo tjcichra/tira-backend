@@ -85,24 +85,6 @@ pub async fn get_current_user_endpoint(
     Ok(controller::create_success_response_ok(assignments))
 }
 
-/// Endpoint for retrieving all tickets reported by the current user.
-///
-/// Requires authentication.
-///
-/// **GET /users/tickets/reported**
-///
-/// TODO Change endpoint name
-#[get("/users/tickets/reported")]
-pub async fn get_tickets_reported_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>,
-) -> TiraResponse<Vec<TicketWithoutDescription>> {
-    let user_id = controller::authentication(&conn, cookies).await?;
-
-    let tickets = service::tickets::get_tickets(&conn, Some(user_id)).await?;
-    Ok(controller::create_success_response_ok(tickets))
-}
-
 /// Endpoint for retrieving a user.
 ///
 /// **GET /users/<user_id>**
@@ -132,8 +114,15 @@ pub async fn get_users_endpoint(
 ///
 /// **PATCH /users/<user_id>**
 #[patch("/users/<user_id>", data = "<update_user_json>")]
-pub async fn patch_user_by_id_endpoint(conn: TiraDbConn, update_user_json: Json<UpdateUser>, user_id: i64) -> TiraResponse<AlteredResourceResponse> {
-    service::users::update_user_by_id(&conn, update_user_json.0, user_id).await?;
+pub async fn patch_user_by_id_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, update_user_json: Json<UpdateUser>, user_id: i64) -> TiraResponse<AlteredResourceResponse> {
+    let update_user = update_user_json.0;
+    let current_user_id = controller::authentication(&conn, cookies).await?;
+
+    if user_id != current_user_id {
+        return Err(controller::create_error_response(Status::BadRequest, "Cannot edit another person's user!".into()));
+    }
+
+    service::users::update_user_by_id(&conn, update_user, user_id).await?;
 
     let message = format!("Successfully edited user!");
     let response = AlteredResourceResponse { message, id: user_id };
