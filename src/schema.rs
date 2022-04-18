@@ -41,11 +41,11 @@ table! {
 table! {
     tickets (id) {
         id -> Int8,
-        category_id -> Nullable<Int8>,
         subject -> Text,
         description -> Nullable<Text>,
-        status -> Text,
+        category_id -> Nullable<Int8>,
         priority -> Text,
+        status -> Text,
         created -> Timestamp,
         reporter_id -> Int8,
     }
@@ -72,4 +72,11 @@ joinable!(sessions -> users (user_id));
 joinable!(tickets -> categories (category_id));
 joinable!(tickets -> users (reporter_id));
 
-allow_tables_to_appear_in_same_query!(assignments, categories, comments, sessions, tickets, users,);
+allow_tables_to_appear_in_same_query!(
+    assignments,
+    categories,
+    comments,
+    sessions,
+    tickets,
+    users,
+);

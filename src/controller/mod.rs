@@ -7,6 +7,7 @@ pub mod users;
 use chrono::Utc;
 use diesel::{result::Error as QueryError, ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::http::{CookieJar, Status};
+use rocket::response::status::Custom;
 use rocket::response::{content, status};
 use rocket::{
     http::ContentType,
@@ -16,6 +17,7 @@ use rocket::{
 
 use crate::models::Session;
 use crate::TiraDbConn;
+use crate::models::success::StandardResponse;
 
 const TIRA_AUTH_COOKIE: &str = "tirauth";
 
@@ -37,6 +39,29 @@ impl From<QueryError> for TiraMessage {
             message: query_error.to_string(),
         }
     }
+}
+
+pub fn convert(error: QueryError) -> TiraErrorResponse {
+    match error {
+        QueryError::NotFound => create_error_response(Status::NotFound, "Resource not found".to_string()),
+        x => create_error_response_500(x.to_string()),
+    }
+}
+
+pub fn create_error_response(status: Status, message: String) -> TiraErrorResponse {
+    Custom(status, Json(TiraMessage { message }))
+}
+
+pub fn create_error_response_500(message: String) -> TiraErrorResponse {
+    create_error_response(Status::InternalServerError, message)
+}
+
+pub fn create_success_response<T>(status: Status, response_data: T) -> TiraSuccessResponse<T> {
+    Custom(status, Json(response_data))
+}
+
+pub fn create_success_response_ok<T>(response_data: T) -> TiraSuccessResponse<T> {
+    create_success_response(Status::Ok, response_data)
 }
 
 #[catch(404)]

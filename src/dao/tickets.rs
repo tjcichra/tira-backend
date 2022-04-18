@@ -1,7 +1,7 @@
 use crate::{
     models::{
         create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-        Assignment, Comment, Ticket, TicketWithoutDescription,
+        Assignment, Comment, Ticket, TicketWithoutDescription, patch::UpdateTicket,
     },
     TiraDbConn,
 };
@@ -14,7 +14,7 @@ pub async fn create_assignment_by_ticket_id_and_assigner_id(
     assignee_id_parameter: CreateAssignmentWithUserId,
     ticket_id_parameter: i64,
     assigner_id_parameter: i64,
-) -> QueryResult<usize> {
+) -> QueryResult<i64> {
     use crate::schema::assignments::dsl::*;
 
     conn.run(move |c| {
@@ -25,7 +25,8 @@ pub async fn create_assignment_by_ticket_id_and_assigner_id(
                 assigner_id.eq(assigner_id_parameter),
                 assigned.eq(Utc::now().naive_utc()),
             ))
-            .execute(c)
+            .returning(id)
+            .get_result(c)
     })
     .await
 }
@@ -36,7 +37,7 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
     comment: CreateComment,
     ticket_id_parameter: i64,
     commenter_id_parameter: i64,
-) -> QueryResult<usize> {
+) -> QueryResult<i64> {
     use crate::schema::comments::dsl::*;
 
     conn.run(move |c| {
@@ -47,7 +48,8 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
                 commenter_id.eq(commenter_id_parameter),
                 commented.eq(Utc::now().naive_utc()),
             ))
-            .execute(c)
+            .returning(id)
+            .get_result(c)
     })
     .await
 }
@@ -156,4 +158,15 @@ pub async fn get_tickets(
         }
         None => conn.run(|c| tickets.load(c)).await,
     }
+}
+
+/// DAO function for updating a ticket by id.
+pub async fn update_ticket_by_id(conn: &TiraDbConn, ticket: UpdateTicket, ticket_id: i64) -> QueryResult<usize> {
+    use crate::schema::tickets::dsl::*;
+
+    conn.run(move |c| {
+        diesel::update(tickets.filter(id.eq(ticket_id)))
+            .set(ticket)
+            .execute(c)
+    }).await
 }

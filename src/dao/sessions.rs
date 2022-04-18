@@ -24,7 +24,7 @@ pub async fn create_session_by_session_uuid_and_user_id(
     conn: &TiraDbConn,
     session_uuid: String,
     user_id_parameter: i64,
-) -> QueryResult<usize> {
+) -> QueryResult<String> {
     use crate::schema::sessions::dsl::*;
 
     conn.run(move |c| {
@@ -35,7 +35,8 @@ pub async fn create_session_by_session_uuid_and_user_id(
                 created.eq(Utc::now().naive_utc()),
                 expiration.eq(SystemTime::now() + Duration::from_secs(30 * 60)), //TODO: Fix this
             ))
-            .execute(c)
+            .returning(uuid)
+            .get_result(c)
     })
     .await
 }

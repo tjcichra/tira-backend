@@ -1,4 +1,5 @@
 use crate::controller::{self, TiraResponse};
+use crate::models::success::{StandardResponse, AlteredResourceResponse};
 use crate::models::{create::CreateCategory, Category};
 use crate::service::categories;
 use crate::TiraDbConn;
@@ -15,11 +16,13 @@ pub async fn archive_category_by_id_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     category_id: i64,
-) -> TiraResponse<()> {
+) -> TiraResponse<StandardResponse> {
     controller::authentication(&conn, cookies).await?;
-    controller::standardize_response_ok(
-        categories::archive_category_by_id(&conn, category_id).await,
-    )
+    categories::archive_category_by_id(&conn, category_id).await?;
+
+    let message = format!("Successfully archived category with id {}!", category_id);
+    let response = StandardResponse { message };
+    Ok(controller::create_success_response_ok(response))
 }
 
 /// Endpoint for creating a category.
@@ -39,12 +42,13 @@ pub async fn create_category_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_category_json: Json<CreateCategory>,
-) -> TiraResponse<()> {
+) -> TiraResponse<AlteredResourceResponse> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(
-        categories::create_category(&conn, create_category_json.0, user_id).await,
-        Status::Created,
-    )
+    let category_id = categories::create_category(&conn, create_category_json.0, user_id).await?;
+
+    let message = format!("Successfully created category with id {}", category_id);
+    let response = AlteredResourceResponse { message, id: category_id };
+    Ok(controller::create_success_response(Status::Created, response))
 }
 
 /// Endpoint for retrieving every category.
@@ -59,7 +63,8 @@ pub async fn get_categories_endpoint(
     conn: TiraDbConn,
     archived: Option<bool>,
 ) -> TiraResponse<Vec<Category>> {
-    controller::standardize_response_ok(categories::get_categories(&conn, archived).await)
+    let categories = categories::get_categories(&conn, archived).await?;
+    Ok(controller::create_success_response_ok(categories))
 }
 
 /// Endpoint for retrieving a category.
@@ -70,5 +75,6 @@ pub async fn get_category_by_id_endpoint(
     conn: TiraDbConn,
     category_id: i64,
 ) -> TiraResponse<Category> {
-    controller::standardize_response_ok(categories::get_category_by_id(&conn, category_id).await)
+    let category = categories::get_category_by_id(&conn, category_id).await?;
+    Ok(controller::create_success_response_ok(category))
 }

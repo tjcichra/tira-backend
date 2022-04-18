@@ -18,13 +18,14 @@ pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<
 }
 
 /// DAO function for creating a user.
-pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> QueryResult<usize> {
+pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> QueryResult<i64> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| {
         diesel::insert_into(users)
             .values((&user, created.eq(Utc::now().naive_utc())))
-            .execute(c)
+            .returning(id)
+            .get_result(c)
     })
     .await
 }

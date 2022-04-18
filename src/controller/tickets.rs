@@ -1,6 +1,7 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
 use crate::models::TicketWithoutDescription;
-use crate::models::success::CreateTicketResponse;
+use crate::models::patch::UpdateTicket;
+use crate::models::success::{AlteredResourceResponse, EditTicketResponse};
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
     Assignment, Comment, Ticket,
@@ -28,18 +29,19 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     cookies: &CookieJar<'_>,
     create_assignment_json: Json<CreateAssignmentWithUserId>,
     ticket_id: i64,
-) -> TiraResponse<()> {
+) -> TiraResponse<AlteredResourceResponse> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(
-        tickets::create_assignment_by_ticket_id_and_assigner_id(
-            &conn,
-            create_assignment_json.0,
-            ticket_id,
-            user_id,
-        )
-        .await,
-        Status::Created,
+    let created_assignment_id = tickets::create_assignment_by_ticket_id_and_assigner_id(
+        &conn,
+        create_assignment_json.0,
+        ticket_id,
+        user_id,
     )
+    .await?;
+
+    let message = format!("Successfully created assignment!");
+    let response = AlteredResourceResponse { message, id: created_assignment_id };
+    Ok(controller::create_success_response(Status::Created, response))
 }
 
 /// Endpoint for creating a comment for a ticket.
@@ -59,18 +61,19 @@ pub async fn create_comment_by_ticket_id_endpoint(
     cookies: &CookieJar<'_>,
     create_comment_json: Json<CreateComment>,
     ticket_id: i64,
-) -> TiraResponse<()> {
+) -> TiraResponse<AlteredResourceResponse> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    controller::standardize_response(
-        tickets::create_comment_by_ticket_id_and_commenter_id(
-            &conn,
-            create_comment_json.0,
-            ticket_id,
-            user_id,
-        )
-        .await,
-        Status::Created,
+    let created_comment_id = tickets::create_comment_by_ticket_id_and_commenter_id(
+        &conn,
+        create_comment_json.0,
+        ticket_id,
+        user_id,
     )
+    .await?;
+
+    let message = format!("Successfully created comment!");
+    let response = AlteredResourceResponse { message, id: created_comment_id };
+    Ok(controller::create_success_response(Status::Created, response))
 }
 
 /// Endpoint for creating a ticket.
@@ -93,12 +96,14 @@ pub async fn create_ticket_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_ticket_json: Json<CreateTicket>,
-) -> Result<Custom<Json<CreateTicketResponse>>, Custom<Json<TiraMessage>>> {
+) -> Result<Custom<Json<AlteredResourceResponse>>, Custom<Json<TiraMessage>>> {
     let user_id = controller::authentication(&conn, cookies).await?;
+    let created_ticket_id = service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
+        .await?;
 
-    service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
-        .await
-        .map(|id| Custom(Status::Created, Json(CreateTicketResponse { id })))
+    let message = format!("Successfully created ticket!");
+    let response = AlteredResourceResponse { message, id: created_ticket_id };
+    Ok(controller::create_success_response(Status::Created, response))
 }
 
 /// Endpoint for retrieving all assignments for a ticket.
@@ -109,9 +114,8 @@ pub async fn get_assignments_by_ticket_id_endpoint(
     conn: TiraDbConn,
     ticket_id: i64,
 ) -> TiraResponse<Vec<Assignment>> {
-    controller::standardize_response_ok(
-        tickets::get_assignments_by_ticket_id(&conn, ticket_id).await,
-    )
+    let assignments = service::tickets::get_assignments_by_ticket_id(&conn, ticket_id).await?;
+    Ok(controller::create_success_response_ok(assignments))
 }
 
 /// Endpoint for retrieving all comments for a ticket.
@@ -122,7 +126,8 @@ pub async fn get_comments_by_ticket_id_endpoint(
     conn: TiraDbConn,
     ticket_id: i64,
 ) -> TiraResponse<Vec<Comment>> {
-    controller::standardize_response_ok(tickets::get_comments_by_ticket_id(&conn, ticket_id).await)
+    let comments = service::tickets::get_comments_by_ticket_id(&conn, ticket_id).await?;
+    Ok(controller::create_success_response_ok(comments))
 }
 
 /// Endpoint for retrieving a ticket.
@@ -130,7 +135,8 @@ pub async fn get_comments_by_ticket_id_endpoint(
 /// **GET /tickets/<ticket_id>**
 #[get("/tickets/<ticket_id>")]
 pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> TiraResponse<Ticket> {
-    controller::standardize_response_ok(tickets::get_ticket_by_id(&conn, ticket_id).await)
+    let ticket = tickets::get_ticket_by_id(&conn, ticket_id).await?;
+    Ok(controller::create_success_response_ok(ticket))
 }
 
 /// Endpoint for retrieving every ticket.
@@ -145,5 +151,18 @@ pub async fn get_tickets_endpoint(
     conn: TiraDbConn,
     reporter: Option<i64>,
 ) -> TiraResponse<Vec<TicketWithoutDescription>> {
-    controller::standardize_response_ok(tickets::get_tickets(&conn, reporter).await)
+    let tickets = tickets::get_tickets(&conn, reporter).await?;
+    Ok(controller::create_success_response_ok(tickets))
+}
+
+/// Endpoint for upating a ticket.
+///
+/// **PATCH /tickets/<ticket_id>**
+#[patch("/tickets/<ticket_id>", data = "<update_ticket_json>")]
+pub async fn patch_ticket_by_id_endpoint(conn: TiraDbConn, update_ticket_json: Json<UpdateTicket>, ticket_id: i64) -> TiraResponse<AlteredResourceResponse> {
+    service::tickets::update_ticket_by_id(&conn, update_ticket_json.0, ticket_id).await?;
+
+    let message = format!("Successfully edited ticket!");
+    let response = AlteredResourceResponse { message, id: ticket_id };
+    Ok(controller::create_success_response(Status::Created, response))
 }

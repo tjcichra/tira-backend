@@ -18,11 +18,13 @@ pub async fn archive_category_by_id(conn: &TiraDbConn, category_id: i64) -> Quer
 }
 
 /// DAO function for creating a category.
+///
+/// Returns the id of the new category.
 pub async fn create_category(
     conn: &TiraDbConn,
     category: CreateCategory,
     creator_id_parameter: i64,
-) -> QueryResult<usize> {
+) -> QueryResult<i64> {
     use crate::schema::categories::dsl::*;
 
     conn.run(move |c| {
@@ -32,7 +34,8 @@ pub async fn create_category(
                 creator_id.eq(creator_id_parameter),
                 created.eq(Utc::now().naive_utc()),
             ))
-            .execute(c)
+            .returning(id)
+            .get_result(c)
     })
     .await
 }

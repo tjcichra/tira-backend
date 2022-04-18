@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
 
+pub mod patch;
 pub mod success;
 
 pub mod create {
@@ -87,11 +88,11 @@ pub struct Category {
 #[serde(crate = "rocket::serde")]
 pub struct Ticket {
     pub id: i64,
-    pub category_id: Option<i64>,
     pub subject: String,
     pub description: Option<String>,
-    pub status: String,
+    pub category_id: Option<i64>,
     pub priority: String,
+    pub status: String,
     pub created: NaiveDateTime,
     pub reporter_id: i64,
 }
@@ -100,12 +101,12 @@ pub struct Ticket {
 #[serde(crate = "rocket::serde")]
 pub struct TicketWithoutDescription {
     pub id: i64,
-    pub category_id: Option<i64>,
     pub subject: String,
     #[serde(skip_serializing)]
     pub description: Option<String>,
-    pub status: String,
+    pub category_id: Option<i64>,
     pub priority: String,
+    pub status: String,
     pub created: NaiveDateTime,
     pub reporter_id: i64,
 }

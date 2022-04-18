@@ -1,17 +1,16 @@
 use crate::{
-    controller::TiraMessage,
-    dao::categories,
-    models::{create::CreateCategory, Category},
+    controller::{self, TiraErrorResponse},
+    dao::{categories, self},
+    models::{Category, create::CreateCategory},
     service, TiraDbConn,
 };
-use diesel::result::Error as QueryError;
 
 /// Service function for archiving category by id.
 pub async fn archive_category_by_id(
     conn: &TiraDbConn,
     category_id: i64,
-) -> Result<(), TiraMessage> {
-    let categories_archived = categories::archive_category_by_id(conn, category_id).await;
+) -> Result<(), TiraErrorResponse> {
+    let categories_archived = categories::archive_category_by_id(conn, category_id).await.map_err(controller::convert)?;
     service::check_only_one_row_changed(categories_archived)
 }
 
@@ -20,20 +19,19 @@ pub async fn create_category(
     conn: &TiraDbConn,
     category: CreateCategory,
     creator_id: i64,
-) -> Result<(), TiraMessage> {
-    let categories_created = categories::create_category(conn, category, creator_id).await;
-    service::check_only_one_row_changed(categories_created)
+) -> Result<i64, TiraErrorResponse> {
+    dao::categories::create_category(conn, category, creator_id).await.map_err(controller::convert)
 }
 
 /// Service function for retrieving all categories.
 pub async fn get_categories(
     conn: &TiraDbConn,
     filter_archived: Option<bool>,
-) -> Result<Vec<Category>, QueryError> {
-    categories::get_categories(conn, filter_archived).await
+) -> Result<Vec<Category>, TiraErrorResponse> {
+    dao::categories::get_categories(conn, filter_archived).await.map_err(controller::convert)
 }
 
 /// Service function for retrieving a category by user id.
-pub async fn get_category_by_id(conn: &TiraDbConn, user_id: i64) -> Result<Category, QueryError> {
-    categories::get_category_by_id(conn, user_id).await
+pub async fn get_category_by_id(conn: &TiraDbConn, user_id: i64) -> Result<Category, TiraErrorResponse> {
+    dao::categories::get_category_by_id(conn, user_id).await.map_err(controller::convert)
 }
