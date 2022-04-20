@@ -138,7 +138,7 @@ pub async fn get_comments_by_ticket_id(
 
 /// DAO function for retrieving a ticket by id.
 pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<Ticket> {
-    use crate::schema::tickets::dsl::*;
+    use crate::schema::tickets::dsl::{id, tickets};
 
     conn.run(move |c| tickets.filter(id.eq(ticket_id)).first::<Ticket>(c))
         .await

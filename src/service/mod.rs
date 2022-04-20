@@ -2,6 +2,7 @@ use crate::controller::{TiraMessage, TiraErrorResponse, self};
 use std::cmp::Ordering;
 
 pub mod categories;
+pub mod emails;
 pub mod images;
 pub mod security;
 pub mod sessions;
