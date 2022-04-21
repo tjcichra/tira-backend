@@ -1,5 +1,6 @@
 use rocket::serde::{Deserialize};
 
+use crate::schema::comments;
 use crate::schema::tickets;
 use crate::schema::users;
 
@@ -25,4 +26,11 @@ pub struct UpdateUser {
     pub last_name: Option<String>,
     pub profile_picture_url: Option<String>,
     pub archived: Option<bool>,
+}
+
+#[derive(AsChangeset, Debug, Deserialize)]
+#[serde(crate = "rocket::serde")]
+#[table_name = "comments"]
+pub struct UpdateComment {
+    pub content: String,
 }

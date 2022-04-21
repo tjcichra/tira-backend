@@ -1,4 +1,3 @@
-use crate::controller::{categories, images, sessions, tickets, users};
 use diesel::PgConnection;
 use dotenv::dotenv;
 use rocket::{
@@ -73,30 +72,31 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
-                categories::archive_category_by_id_endpoint,
-                categories::create_category_endpoint,
-                categories::get_categories_endpoint,
-                categories::get_category_by_id_endpoint,
-                images::retrieve_image_endpoint,
-                images::upload_image_endpoint,
-                sessions::login_endpoint,
-                sessions::login_options_endpoint,
-                sessions::logout_endpoint,
-                tickets::create_assignment_by_ticket_id_endpoint,
-                tickets::create_comment_by_ticket_id_endpoint,
-                tickets::create_ticket_endpoint,
-                tickets::get_assignments_by_ticket_id_endpoint,
-                tickets::get_comments_by_ticket_id_endpoint,
-                tickets::get_ticket_by_id_endpoint,
-                tickets::get_tickets_endpoint,
-                tickets::patch_ticket_by_id_endpoint,
-                users::archive_user_by_id_endpoint,
-                users::create_user_endpoint,
-                users::get_assignments_by_user_id_endpoint,
-                users::get_current_user_endpoint,
-                users::get_user_by_id_endpoint,
-                users::get_users_endpoint,
-                users::patch_user_by_id_endpoint
+                controller::categories::archive_category_by_id_endpoint,
+                controller::categories::create_category_endpoint,
+                controller::categories::get_categories_endpoint,
+                controller::categories::get_category_by_id_endpoint,
+                controller::comments::patch_comment_by_id_endpoint,
+                controller::images::retrieve_image_endpoint,
+                controller::images::upload_image_endpoint,
+                controller::sessions::login_endpoint,
+                controller::sessions::login_options_endpoint,
+                controller::sessions::logout_endpoint,
+                controller::tickets::create_assignment_by_ticket_id_endpoint,
+                controller::tickets::create_comment_by_ticket_id_endpoint,
+                controller::tickets::create_ticket_endpoint,
+                controller::tickets::get_assignments_by_ticket_id_endpoint,
+                controller::tickets::get_comments_by_ticket_id_endpoint,
+                controller::tickets::get_ticket_by_id_endpoint,
+                controller::tickets::get_tickets_endpoint,
+                controller::tickets::patch_ticket_by_id_endpoint,
+                controller::users::archive_user_by_id_endpoint,
+                controller::users::create_user_endpoint,
+                controller::users::get_assignments_by_user_id_endpoint,
+                controller::users::get_current_user_endpoint,
+                controller::users::get_user_by_id_endpoint,
+                controller::users::get_users_endpoint,
+                controller::users::patch_user_by_id_endpoint
             ],
         )
         .register("/", catchers![controller::not_found])

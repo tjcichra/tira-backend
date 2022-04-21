@@ -1,4 +1,5 @@
 pub mod categories;
+pub mod comments;
 pub mod images;
 pub mod sessions;
 pub mod tickets;
