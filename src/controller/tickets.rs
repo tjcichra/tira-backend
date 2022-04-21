@@ -41,8 +41,14 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     .await?;
 
     let assignee = service::users::get_user_by_id(&conn, assignee_id).await?;
+    
     if let Some(email_address) = assignee.email_address {
-        service::emails::send_email(&email_address);
+        let assigner = service::users::get_user_by_id(&conn, user_id).await?;
+        let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
+
+        let body = service::emails::create_assignment_email_text(assigner, ticket);
+
+        service::emails::send_email(&email_address, body);
     }
 
     let message = format!("Successfully created assignment!");
