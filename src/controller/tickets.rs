@@ -1,7 +1,7 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
 use crate::models::TicketWithoutDescription;
 use crate::models::patch::UpdateTicket;
-use crate::models::success::{AlteredResourceResponse, EditTicketResponse};
+use crate::models::success::{AlteredResourceResponse, EditTicketResponse, TicketResponse, TicketWithoutDescriptionResponse, CommentResponse};
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
     Assignment, Comment, Ticket,
@@ -137,18 +137,46 @@ pub async fn get_assignments_by_ticket_id_endpoint(
 pub async fn get_comments_by_ticket_id_endpoint(
     conn: TiraDbConn,
     ticket_id: i64,
-) -> TiraResponse<Vec<Comment>> {
+) -> TiraResponse<Vec<CommentResponse>> {
     let comments = service::tickets::get_comments_by_ticket_id(&conn, ticket_id).await?;
-    Ok(controller::create_success_response_ok(comments))
+    let mut comments_response = Vec::new();
+
+    for comment in comments {
+        let commenter =  service::users::get_user_by_id(&conn, comment.commenter_id).await?;
+
+        let comment_response = CommentResponse {
+            id: comment.id,
+            commenter,
+            content: comment.content,
+            commented: comment.commented,
+        };
+
+        comments_response.push(comment_response);
+    }
+    
+    Ok(controller::create_success_response_ok(comments_response))
 }
 
 /// Endpoint for retrieving a ticket.
 ///
 /// **GET /tickets/<ticket_id>**
 #[get("/tickets/<ticket_id>")]
-pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> TiraResponse<Ticket> {
-    let ticket = tickets::get_ticket_by_id(&conn, ticket_id).await?;
-    Ok(controller::create_success_response_ok(ticket))
+pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> TiraResponse<TicketResponse> {
+    let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
+    let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
+
+    let ticket_response = TicketResponse {
+        id: ticket.id,
+        subject: ticket.subject,
+        description: ticket.description,
+        category_id: ticket.category_id,
+        priority: ticket.priority,
+        status: ticket.status,
+        created: ticket.created,
+        reporter
+    };
+
+    Ok(controller::create_success_response_ok(ticket_response))
 }
 
 /// Endpoint for retrieving every ticket.
@@ -162,9 +190,28 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
 pub async fn get_tickets_endpoint(
     conn: TiraDbConn,
     reporter: Option<i64>,
-) -> TiraResponse<Vec<TicketWithoutDescription>> {
+) -> TiraResponse<Vec<TicketWithoutDescriptionResponse>> {
     let tickets = tickets::get_tickets(&conn, reporter).await?;
-    Ok(controller::create_success_response_ok(tickets))
+    let mut tickets_response = Vec::new();
+
+    for ticket in tickets {
+        let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
+
+        let ticket_response = TicketWithoutDescriptionResponse {
+            id: ticket.id,
+            subject: ticket.subject.clone(),
+            description: ticket.description.clone(),
+            category_id: ticket.category_id,
+            priority: ticket.priority.clone(),
+            status: ticket.status.clone(),
+            created: ticket.created,
+            reporter
+        };
+
+        tickets_response.push(ticket_response);
+    }
+
+    Ok(controller::create_success_response_ok(tickets_response))
 }
 
 /// Endpoint for updating a ticket.

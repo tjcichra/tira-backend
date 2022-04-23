@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::{
     controller::{self, TiraResponse, TIRA_AUTH_COOKIE},
     models::{Login, User, success::StandardResponse},
@@ -5,8 +7,7 @@ use crate::{
     TiraDbConn
 };
 use rocket::{
-    http::{Cookie, CookieJar, Status, private::cookie::Expiration},
-    response::status,
+    http::{Cookie, CookieJar, Status},
     serde::json::Json,
 };
 use time::{OffsetDateTime, Duration};
@@ -37,7 +38,7 @@ pub async fn login_endpoint(
         None
     } else {
         let mut expiration = OffsetDateTime::now_utc();
-        expiration += Duration::hour();
+        expiration += Duration::minutes(env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap());
         Some(expiration)
     };
 
