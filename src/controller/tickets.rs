@@ -185,13 +185,15 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
 ///
 /// Query Parameters:
 ///
-/// archived: Used to filter tickets that were reported by a certain user. Takes a number value. (optional)
-#[get("/tickets?<reporter>")]
+/// reporter: Used to filter tickets that were reported by a certain user. Takes a number value. (optional)
+/// open: Used to filter tickets that are open or not. Takes a boolean. (optional)
+#[get("/tickets?<reporter>&<open>")]
 pub async fn get_tickets_endpoint(
     conn: TiraDbConn,
     reporter: Option<i64>,
+    open: Option<bool>,
 ) -> TiraResponse<Vec<TicketWithoutDescriptionResponse>> {
-    let tickets = tickets::get_tickets(&conn, reporter).await?;
+    let tickets = tickets::get_tickets(&conn, reporter, open).await?;
     let mut tickets_response = Vec::new();
 
     for ticket in tickets {

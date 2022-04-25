@@ -53,9 +53,9 @@ pub async fn create_ticket_by_reporter_id(
     }
 
     match ticket.status.as_str() {
-        "Backlog" | "In Progress" | "In Review" | "Done" | "Closed" => (),
+        "Backlog" | "In Progress" | "Not Deployed Yet" | "Done" | "Closed" => (),
         _ => {
-            return Err(controller::create_error_response(Status::BadRequest, "Status must be 'Backlog', 'In Progress', 'In Review', 'Done', or 'Closed'".to_string()));
+            return Err(controller::create_error_response(Status::BadRequest, "Status must be 'Backlog', 'In Progress', 'Not Deployed Yet', 'Done', or 'Closed'".to_string()));
         }
     }
 
@@ -96,8 +96,9 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> Result<Ticke
 pub async fn get_tickets(
     conn: &TiraDbConn,
     filter_reporter_id: Option<i64>,
+    filter_open: Option<bool>
 ) -> Result<Vec<TicketWithoutDescription>, TiraErrorResponse> {
-    dao::tickets::get_tickets(conn, filter_reporter_id).await.map_err(controller::convert)
+    dao::tickets::get_tickets(conn, filter_reporter_id, filter_open).await.map_err(controller::convert)
 }
 
 /// Service function for updating a ticket by id.

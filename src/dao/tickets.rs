@@ -148,16 +148,27 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<
 pub async fn get_tickets(
     conn: &TiraDbConn,
     filter_reporter_id: Option<i64>,
+    filter_open: Option<bool>
 ) -> QueryResult<Vec<TicketWithoutDescription>> {
-    use crate::schema::tickets::dsl::*;
+    use crate::schema::tickets;
 
-    match filter_reporter_id {
-        Some(filter_reporter_id) => {
-            conn.run(move |c| tickets.filter(reporter_id.eq(filter_reporter_id)).load(c))
-                .await
+    conn.run(move |c| {
+        let mut query = tickets::table.into_boxed();
+    
+        if let Some(filter_reporter_id) = filter_reporter_id {
+            query = query.filter(tickets::reporter_id.eq(filter_reporter_id));
         }
-        None => conn.run(|c| tickets.load(c)).await,
-    }
+
+        if let Some(filter_open) = filter_open {
+            if filter_open {
+                query = query.filter(tickets::status.ne("Done")).filter(tickets::status.ne("Closed"));
+            } else {
+                query = query.filter(tickets::status.eq("Done")).or_filter(tickets::status.eq("Closed"));
+            }
+        }
+
+        query.load(c)
+    }).await
 }
 
 /// DAO function for updating a ticket by id.
