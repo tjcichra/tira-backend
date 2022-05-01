@@ -1,3 +1,4 @@
+pub mod assignments;
 pub mod categories;
 pub mod comments;
 pub mod sessions;

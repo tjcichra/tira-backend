@@ -1,3 +1,4 @@
+pub mod assignments;
 pub mod categories;
 pub mod comments;
 pub mod images;
@@ -18,7 +19,6 @@ use rocket::{
 
 use crate::models::Session;
 use crate::TiraDbConn;
-use crate::models::success::StandardResponse;
 
 const TIRA_AUTH_COOKIE: &str = "tirauth";
 

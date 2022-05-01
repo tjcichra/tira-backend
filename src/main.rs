@@ -72,6 +72,7 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
+                controller::assignments::get_assignments_endpoint,
                 controller::categories::archive_category_by_id_endpoint,
                 controller::categories::create_category_endpoint,
                 controller::categories::get_categories_endpoint,
