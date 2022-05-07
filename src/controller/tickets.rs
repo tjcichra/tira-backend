@@ -199,11 +199,15 @@ pub async fn get_tickets_endpoint(
     for ticket in tickets {
         let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
 
+        let category = match ticket.category_id {
+            Some(category_id) => Some(service::categories::get_category_by_id(&conn, category_id).await?),
+            None => None
+        };
+
         let ticket_response = TicketWithoutDescriptionResponse {
             id: ticket.id,
             subject: ticket.subject.clone(),
-            description: ticket.description.clone(),
-            category_id: ticket.category_id,
+            category,
             priority: ticket.priority.clone(),
             status: ticket.status.clone(),
             created: ticket.created,

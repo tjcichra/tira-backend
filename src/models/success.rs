@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use rocket::serde::Serialize;
-
-use crate::models::User;
+use crate::models::{Category, User};
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -49,8 +48,7 @@ pub struct TicketResponse {
 pub struct TicketWithoutDescriptionResponse {
     pub id: i64,
     pub subject: String,
-    pub description: Option<String>,
-    pub category_id: Option<i64>,
+    pub category: Option<Category>,
     pub priority: String,
     pub status: String,
     pub created: NaiveDateTime,
