@@ -1,7 +1,10 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
-use crate::models::TicketWithoutDescription;
 use crate::models::patch::UpdateTicket;
-use crate::models::success::{AlteredResourceResponse, EditTicketResponse, TicketResponse, TicketWithoutDescriptionResponse, CommentResponse};
+use crate::models::success::{
+    AlteredResourceResponse, CommentResponse, EditTicketResponse, TicketResponse,
+    TicketWithoutDescriptionResponse,
+};
+use crate::models::TicketWithoutDescription;
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
     Assignment, Comment, Ticket,
@@ -41,7 +44,7 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     .await?;
 
     let assignee = service::users::get_user_by_id(&conn, assignee_id).await?;
-    
+
     if let Some(email_address) = assignee.email_address {
         let assigner = service::users::get_user_by_id(&conn, user_id).await?;
         let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
@@ -52,8 +55,14 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     }
 
     let message = format!("Successfully created assignment!");
-    let response = AlteredResourceResponse { message, id: created_assignment_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    let response = AlteredResourceResponse {
+        message,
+        id: created_assignment_id,
+    };
+    Ok(controller::create_success_response(
+        Status::Created,
+        response,
+    ))
 }
 
 /// Endpoint for creating a comment for a ticket.
@@ -84,8 +93,14 @@ pub async fn create_comment_by_ticket_id_endpoint(
     .await?;
 
     let message = format!("Successfully created comment!");
-    let response = AlteredResourceResponse { message, id: created_comment_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    let response = AlteredResourceResponse {
+        message,
+        id: created_comment_id,
+    };
+    Ok(controller::create_success_response(
+        Status::Created,
+        response,
+    ))
 }
 
 /// Endpoint for creating a ticket.
@@ -110,12 +125,19 @@ pub async fn create_ticket_endpoint(
     create_ticket_json: Json<CreateTicket>,
 ) -> Result<Custom<Json<AlteredResourceResponse>>, Custom<Json<TiraMessage>>> {
     let user_id = controller::authentication(&conn, cookies).await?;
-    let created_ticket_id = service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
-        .await?;
+    let created_ticket_id =
+        service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
+            .await?;
 
     let message = format!("Successfully created ticket!");
-    let response = AlteredResourceResponse { message, id: created_ticket_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    let response = AlteredResourceResponse {
+        message,
+        id: created_ticket_id,
+    };
+    Ok(controller::create_success_response(
+        Status::Created,
+        response,
+    ))
 }
 
 /// Endpoint for retrieving all assignments for a ticket.
@@ -142,7 +164,7 @@ pub async fn get_comments_by_ticket_id_endpoint(
     let mut comments_response = Vec::new();
 
     for comment in comments {
-        let commenter =  service::users::get_user_by_id(&conn, comment.commenter_id).await?;
+        let commenter = service::users::get_user_by_id(&conn, comment.commenter_id).await?;
 
         let comment_response = CommentResponse {
             id: comment.id,
@@ -153,7 +175,7 @@ pub async fn get_comments_by_ticket_id_endpoint(
 
         comments_response.push(comment_response);
     }
-    
+
     Ok(controller::create_success_response_ok(comments_response))
 }
 
@@ -161,7 +183,10 @@ pub async fn get_comments_by_ticket_id_endpoint(
 ///
 /// **GET /tickets/<ticket_id>**
 #[get("/tickets/<ticket_id>")]
-pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> TiraResponse<TicketResponse> {
+pub async fn get_ticket_by_id_endpoint(
+    conn: TiraDbConn,
+    ticket_id: i64,
+) -> TiraResponse<TicketResponse> {
     let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
     let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
 
@@ -173,7 +198,7 @@ pub async fn get_ticket_by_id_endpoint(conn: TiraDbConn, ticket_id: i64) -> Tira
         priority: ticket.priority,
         status: ticket.status,
         created: ticket.created,
-        reporter
+        reporter,
     };
 
     Ok(controller::create_success_response_ok(ticket_response))
@@ -200,8 +225,10 @@ pub async fn get_tickets_endpoint(
         let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
 
         let category = match ticket.category_id {
-            Some(category_id) => Some(service::categories::get_category_by_id(&conn, category_id).await?),
-            None => None
+            Some(category_id) => {
+                Some(service::categories::get_category_by_id(&conn, category_id).await?)
+            }
+            None => None,
         };
 
         let ticket_response = TicketWithoutDescriptionResponse {
@@ -211,7 +238,7 @@ pub async fn get_tickets_endpoint(
             priority: ticket.priority.clone(),
             status: ticket.status.clone(),
             created: ticket.created,
-            reporter
+            reporter,
         };
 
         tickets_response.push(ticket_response);
@@ -224,10 +251,17 @@ pub async fn get_tickets_endpoint(
 ///
 /// **PATCH /tickets/<ticket_id>**
 #[patch("/tickets/<ticket_id>", data = "<update_ticket_json>")]
-pub async fn patch_ticket_by_id_endpoint(conn: TiraDbConn, update_ticket_json: Json<UpdateTicket>, ticket_id: i64) -> TiraResponse<AlteredResourceResponse> {
+pub async fn patch_ticket_by_id_endpoint(
+    conn: TiraDbConn,
+    update_ticket_json: Json<UpdateTicket>,
+    ticket_id: i64,
+) -> TiraResponse<AlteredResourceResponse> {
     service::tickets::update_ticket_by_id(&conn, update_ticket_json.0, ticket_id).await?;
 
-    let message = format!("Successfully edited ticket!");
-    let response = AlteredResourceResponse { message, id: ticket_id };
+    let message = "Successfully edited ticket!".to_string();
+    let response = AlteredResourceResponse {
+        message,
+        id: ticket_id,
+    };
     Ok(controller::create_success_response_ok(response))
 }

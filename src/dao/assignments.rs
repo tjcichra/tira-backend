@@ -1,8 +1,11 @@
 use crate::{models::Assignment, TiraDbConn};
-use diesel::{ExpressionMethods, QueryResult, RunQueryDsl, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 /// DAO function for retrieving all assignments.
-pub async fn get_assignments(conn: &TiraDbConn, filter_assignee_id: Option<i64>,) -> QueryResult<Vec<Assignment>> {
+pub async fn get_assignments(
+    conn: &TiraDbConn,
+    filter_assignee_id: Option<i64>,
+) -> QueryResult<Vec<Assignment>> {
     use crate::schema::assignments;
 
     conn.run(move |c| {
@@ -13,5 +16,6 @@ pub async fn get_assignments(conn: &TiraDbConn, filter_assignee_id: Option<i64>,
         }
 
         query.load(c)
-    }).await
+    })
+    .await
 }

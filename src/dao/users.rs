@@ -1,5 +1,5 @@
 use crate::{
-    models::{create::CreateUser, Assignment, Login, User, patch::UpdateUser},
+    models::{create::CreateUser, patch::UpdateUser, Assignment, Login, User},
     TiraDbConn,
 };
 use chrono::Utc;
@@ -83,12 +83,17 @@ pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> Quer
 }
 
 /// DAO function for updating a user by id.
-pub async fn update_user_by_id(conn: &TiraDbConn, user: UpdateUser, user_id: i64) -> QueryResult<usize> {
+pub async fn update_user_by_id(
+    conn: &TiraDbConn,
+    user: UpdateUser,
+    user_id: i64,
+) -> QueryResult<usize> {
     use crate::schema::users::dsl::*;
 
     conn.run(move |c| {
         diesel::update(users.filter(id.eq(user_id)))
             .set(user)
             .execute(c)
-    }).await
+    })
+    .await
 }

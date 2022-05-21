@@ -25,15 +25,18 @@ pub async fn create_session_by_session_uuid_and_user_id(
     conn: &TiraDbConn,
     session_uuid: String,
     user_id_parameter: i64,
-    remember_me: bool
+    remember_me: bool,
 ) -> QueryResult<String> {
     use crate::schema::sessions::dsl::*;
 
     let expiration_parameter = if remember_me {
         None
     } else {
-        let session_length_minutes_env: u64 = env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap();
-        Some(expiration.eq(SystemTime::now() + Duration::from_secs(session_length_minutes_env * 60))) //TODO: Fix this
+        let session_length_minutes_env: u64 =
+            env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap();
+        Some(
+            expiration.eq(SystemTime::now() + Duration::from_secs(session_length_minutes_env * 60)),
+        ) //TODO: Fix this
     };
 
     conn.run(move |c| {

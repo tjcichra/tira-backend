@@ -1,4 +1,8 @@
-use crate::{TiraDbConn, controller::{self, TiraResponse}, models::Assignment, service};
+use crate::{
+    controller::{self, TiraResponse},
+    models::Assignment,
+    service, TiraDbConn,
+};
 
 /// Endpoint for retrieving every assignment.
 ///

@@ -1,4 +1,4 @@
-use crate::controller::{TiraMessage, TiraErrorResponse, self};
+use crate::controller::{self, TiraErrorResponse, TiraMessage};
 use std::cmp::Ordering;
 
 pub mod assignments;
@@ -11,13 +11,15 @@ pub mod sessions;
 pub mod tickets;
 pub mod users;
 
-pub fn check_only_one_row_changed(
-    rows_changed: usize,
-) -> Result<(), TiraErrorResponse> {
+pub fn check_only_one_row_changed(rows_changed: usize) -> Result<(), TiraErrorResponse> {
     match rows_changed.cmp(&1) {
         Ordering::Equal => Ok(()),
-        Ordering::Less => Err(controller::create_error_response_500("No row was affected".into())),
-        Ordering::Greater => Err(controller::create_error_response_500("More than one row was affected".into())),
+        Ordering::Less => Err(controller::create_error_response_500(
+            "No row was affected".into(),
+        )),
+        Ordering::Greater => Err(controller::create_error_response_500(
+            "More than one row was affected".into(),
+        )),
     }
 }
 

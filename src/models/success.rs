@@ -1,6 +1,6 @@
+use crate::models::{Category, User};
 use chrono::NaiveDateTime;
 use rocket::serde::Serialize;
-use crate::models::{Category, User};
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]

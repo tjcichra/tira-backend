@@ -1,5 +1,5 @@
 use crate::controller::{self, TiraResponse};
-use crate::models::success::{StandardResponse, AlteredResourceResponse};
+use crate::models::success::{AlteredResourceResponse, StandardResponse};
 use crate::models::{create::CreateCategory, Category};
 use crate::service::categories;
 use crate::TiraDbConn;
@@ -47,8 +47,14 @@ pub async fn create_category_endpoint(
     let category_id = categories::create_category(&conn, create_category_json.0, user_id).await?;
 
     let message = format!("Successfully created category with id {}", category_id);
-    let response = AlteredResourceResponse { message, id: category_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    let response = AlteredResourceResponse {
+        message,
+        id: category_id,
+    };
+    Ok(controller::create_success_response(
+        Status::Created,
+        response,
+    ))
 }
 
 /// Endpoint for retrieving every category.

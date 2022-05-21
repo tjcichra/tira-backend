@@ -2,15 +2,14 @@ use std::env;
 
 use crate::{
     controller::{self, TiraResponse, TIRA_AUTH_COOKIE},
-    models::{Login, User, success::StandardResponse},
-    service,
-    TiraDbConn
+    models::{success::StandardResponse, Login, User},
+    service, TiraDbConn,
 };
 use rocket::{
     http::{Cookie, CookieJar, Status},
     serde::json::Json,
 };
-use time::{OffsetDateTime, Duration};
+use time::{Duration, OffsetDateTime};
 
 /// Endpoint for login.
 ///
@@ -38,14 +37,20 @@ pub async fn login_endpoint(
         None
     } else {
         let mut expiration = OffsetDateTime::now_utc();
-        expiration += Duration::minutes(env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap());
+        expiration +=
+            Duration::minutes(env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap());
         Some(expiration)
     };
 
-    let cookie = Cookie::build(TIRA_AUTH_COOKIE, uuid_and_user.0).expires(expiration).finish();
+    let cookie = Cookie::build(TIRA_AUTH_COOKIE, uuid_and_user.0)
+        .expires(expiration)
+        .finish();
     cookies.add(cookie);
 
-    Ok(controller::create_success_response(Status::Created, uuid_and_user.1))
+    Ok(controller::create_success_response(
+        Status::Created,
+        uuid_and_user.1,
+    ))
 }
 
 /// OPTIONS endpoint for login.
@@ -58,7 +63,10 @@ pub async fn login_options_endpoint() {}
 ///
 /// Requires authentication.
 #[post("/logout")]
-pub async fn logout_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>) -> TiraResponse<StandardResponse> {
+pub async fn logout_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+) -> TiraResponse<StandardResponse> {
     let user_id = controller::authentication(&conn, cookies).await?;
     service::sessions::logout(&conn, user_id).await?;
     cookies.remove(Cookie::named(TIRA_AUTH_COOKIE));

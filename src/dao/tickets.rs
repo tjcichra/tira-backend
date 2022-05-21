@@ -1,12 +1,13 @@
 use crate::{
     models::{
         create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-        Assignment, Comment, Ticket, TicketWithoutDescription, patch::UpdateTicket,
+        patch::UpdateTicket,
+        Assignment, Comment, Ticket, TicketWithoutDescription,
     },
     TiraDbConn,
 };
 use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, query_dsl::methods::BoxedDsl};
 
 /// DAO function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
@@ -148,36 +149,56 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<
 pub async fn get_tickets(
     conn: &TiraDbConn,
     filter_reporter_id: Option<i64>,
-    filter_open: Option<bool>
+    filter_open: Option<bool>,
 ) -> QueryResult<Vec<TicketWithoutDescription>> {
     use crate::schema::tickets;
 
     conn.run(move |c| {
         let mut query = tickets::table.into_boxed();
-    
+
         if let Some(filter_reporter_id) = filter_reporter_id {
             query = query.filter(tickets::reporter_id.eq(filter_reporter_id));
         }
 
         if let Some(filter_open) = filter_open {
             if filter_open {
-                query = query.filter(tickets::status.ne("Done")).filter(tickets::status.ne("Closed"));
+                query = query
+                    .filter(tickets::status.ne("Done"))
+                    .filter(tickets::status.ne("Closed"));
             } else {
-                query = query.filter(tickets::status.eq("Done")).or_filter(tickets::status.eq("Closed"));
+                query = query
+                    .filter(tickets::status.eq("Done"))
+                    .or_filter(tickets::status.eq("Closed"));
             }
         }
 
         query.load(c)
-    }).await
+    })
+    .await
 }
 
 /// DAO function for updating a ticket by id.
-pub async fn update_ticket_by_id(conn: &TiraDbConn, ticket: UpdateTicket, ticket_id: i64) -> QueryResult<usize> {
-    use crate::schema::tickets::dsl::*;
-
+pub async fn update_ticket_by_id(
+    conn: &TiraDbConn,
+    ticket: UpdateTicket,
+    ticket_id: i64,
+) -> QueryResult<usize> {
     conn.run(move |c| {
-        diesel::update(tickets.filter(id.eq(ticket_id)))
-            .set(ticket)
+        use crate::schema::tickets::dsl;
+
+        let subject = ticket.subject.map(|subject| dsl::subject.eq(subject));
+        let priority = ticket.priority.map(|priority| dsl::priority.eq(priority));
+        let status = ticket.status.map(|status| dsl::status.eq(status));
+
+        diesel::update(dsl::tickets.filter(dsl::id.eq(ticket_id)))
+            .set((
+                subject,
+                dsl::description.eq(ticket.description),
+                dsl::category_id.eq(ticket.category_id),
+                priority,
+                status
+            ))
             .execute(c)
-    }).await
+    })
+    .await
 }

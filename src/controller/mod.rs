@@ -44,7 +44,9 @@ impl From<QueryError> for TiraMessage {
 
 pub fn convert(error: QueryError) -> TiraErrorResponse {
     match error {
-        QueryError::NotFound => create_error_response(Status::NotFound, "Resource not found".to_string()),
+        QueryError::NotFound => {
+            create_error_response(Status::NotFound, "Resource not found".to_string())
+        }
         x => create_error_response_500(x.to_string()),
     }
 }
@@ -127,7 +129,8 @@ async fn authentication(
                             if Utc::now().naive_utc() > exp {
                                 // Delete expired session
                                 conn.run(|c| {
-                                    diesel::delete(sessions.filter(uuid.eq(session_uuid_2))).execute(c)
+                                    diesel::delete(sessions.filter(uuid.eq(session_uuid_2)))
+                                        .execute(c)
                                 })
                                 .await
                                 .unwrap();
@@ -136,13 +139,14 @@ async fn authentication(
                                 Err(status::Custom(
                                     Status::Forbidden,
                                     Json(TiraMessage {
-                                        message: "Session has expired, please log in again.".to_string(),
+                                        message: "Session has expired, please log in again."
+                                            .to_string(),
                                     }),
                                 ))
                             } else {
                                 Ok(session.user_id)
                             }
-                        },
+                        }
                         None => Ok(session.user_id),
                     }
                 }

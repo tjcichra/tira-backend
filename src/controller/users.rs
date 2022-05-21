@@ -1,8 +1,8 @@
 use crate::controller::TiraResponse;
+use crate::models::patch::UpdateUser;
 use crate::models::success::AlteredResourceResponse;
 use crate::models::{create::CreateUser, User};
 use crate::models::{Assignment, TicketWithoutDescription};
-use crate::models::patch::UpdateUser;
 use crate::service;
 use crate::TiraDbConn;
 use rocket::http::{CookieJar, Status};
@@ -25,7 +25,10 @@ pub async fn archive_user_by_id_endpoint(
     service::users::archive_user_by_id(&conn, user_id).await?;
 
     let message = format!("Successfully archived user!");
-    let response = AlteredResourceResponse { message, id: user_id };
+    let response = AlteredResourceResponse {
+        message,
+        id: user_id,
+    };
     Ok(controller::create_success_response_ok(response))
 }
 
@@ -53,8 +56,14 @@ pub async fn create_user_endpoint(
     let created_user_id = service::users::create_user(&conn, user_json).await?;
 
     let message = format!("Successfully created user!");
-    let response = AlteredResourceResponse { message, id: created_user_id };
-    Ok(controller::create_success_response(Status::Created, response))
+    let response = AlteredResourceResponse {
+        message,
+        id: created_user_id,
+    };
+    Ok(controller::create_success_response(
+        Status::Created,
+        response,
+    ))
 }
 
 /// Endpoint for retrieving all assignments for a user.
@@ -114,17 +123,28 @@ pub async fn get_users_endpoint(
 ///
 /// **PATCH /users/<user_id>**
 #[patch("/users/<user_id>", data = "<update_user_json>")]
-pub async fn patch_user_by_id_endpoint(conn: TiraDbConn, cookies: &CookieJar<'_>, update_user_json: Json<UpdateUser>, user_id: i64) -> TiraResponse<AlteredResourceResponse> {
+pub async fn patch_user_by_id_endpoint(
+    conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
+    update_user_json: Json<UpdateUser>,
+    user_id: i64,
+) -> TiraResponse<AlteredResourceResponse> {
     let update_user = update_user_json.0;
     let current_user_id = controller::authentication(&conn, cookies).await?;
 
     if user_id != current_user_id {
-        return Err(controller::create_error_response(Status::BadRequest, "Cannot edit another person's user!".into()));
+        return Err(controller::create_error_response(
+            Status::BadRequest,
+            "Cannot edit another person's user!".into(),
+        ));
     }
 
     service::users::update_user_by_id(&conn, update_user, user_id).await?;
 
     let message = format!("Successfully edited user!");
-    let response = AlteredResourceResponse { message, id: user_id };
+    let response = AlteredResourceResponse {
+        message,
+        id: user_id,
+    };
     Ok(controller::create_success_response_ok(response))
 }

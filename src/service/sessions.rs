@@ -16,24 +16,32 @@ use crate::{
 /// Service function for performing a login.
 ///
 /// Returns the UUID for the newly created session and user.
-pub async fn login(conn: &TiraDbConn, login_info: Login) -> Result<(String, User), TiraErrorResponse> {
+pub async fn login(
+    conn: &TiraDbConn,
+    login_info: Login,
+) -> Result<(String, User), TiraErrorResponse> {
     let remember_me = login_info.remember_me;
-    let user = dao::users::get_user_by_username_and_password(conn, login_info).await.map_err(controller::convert)?;
+    let user = dao::users::get_user_by_username_and_password(conn, login_info)
+        .await
+        .map_err(controller::convert)?;
 
     let my_uuid = Uuid::new_v4();
     dao::sessions::create_session_by_session_uuid_and_user_id(
         conn,
         my_uuid.to_string(),
         user.id,
-        remember_me
+        remember_me,
     )
-    .await.map_err(controller::convert)?;
+    .await
+    .map_err(controller::convert)?;
 
     Ok((my_uuid.to_string(), user))
 }
 
 /// Service function for having a user log out.
 pub async fn logout(conn: &TiraDbConn, user_id: i64) -> Result<(), TiraErrorResponse> {
-    let sessions_deleted = dao::sessions::delete_sessions_by_user_id(conn, user_id).await.map_err(controller::convert)?;
+    let sessions_deleted = dao::sessions::delete_sessions_by_user_id(conn, user_id)
+        .await
+        .map_err(controller::convert)?;
     service::check_only_one_row_changed(sessions_deleted)
 }
