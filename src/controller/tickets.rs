@@ -190,6 +190,14 @@ pub async fn get_ticket_by_id_endpoint(
     let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
     let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
 
+    let assignments = service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
+
+    let assignee_ids: Vec<_> = assignments.iter().map(|assignment| {
+        return assignment.assignee_id;
+    }).collect();
+
+    let assignees = service::users::get_users_by_ids(&conn, assignee_ids).await?;
+
     let ticket_response = TicketResponse {
         id: ticket.id,
         subject: ticket.subject,
@@ -199,6 +207,7 @@ pub async fn get_ticket_by_id_endpoint(
         status: ticket.status,
         created: ticket.created,
         reporter,
+        assignees
     };
 
     Ok(controller::create_success_response_ok(ticket_response))
@@ -231,6 +240,14 @@ pub async fn get_tickets_endpoint(
             None => None,
         };
 
+        let assignments = service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
+
+        let assignee_ids: Vec<_> = assignments.iter().map(|assignment| {
+            return assignment.assignee_id;
+        }).collect();
+
+        let assignees = service::users::get_users_by_ids(&conn, assignee_ids).await?;
+
         let ticket_response = TicketWithoutDescriptionResponse {
             id: ticket.id,
             subject: ticket.subject.clone(),
@@ -239,6 +256,7 @@ pub async fn get_tickets_endpoint(
             status: ticket.status.clone(),
             created: ticket.created,
             reporter,
+            assignees
         };
 
         tickets_response.push(ticket_response);

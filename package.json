@@ -1,0 +1,14 @@
+{
+  "name": "tira-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/tjcichra/tira-backend.git",
+  "author": "tjcichra <8120075+tjcichra@users.noreply.github.com>",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "husky": "^8.0.1"
+  }
+}

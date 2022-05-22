@@ -9,8 +9,9 @@ use crate::{
 pub async fn get_assignments(
     conn: &TiraDbConn,
     assignee_id: Option<i64>,
+    ticket_id: Option<i64>,
 ) -> Result<Vec<Assignment>, TiraErrorResponse> {
-    dao::assignments::get_assignments(conn, assignee_id)
+    dao::assignments::get_assignments(conn, assignee_id, ticket_id)
         .await
         .map_err(controller::convert)
 }

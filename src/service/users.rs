@@ -41,6 +41,13 @@ pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> Result<User, Tir
         .map_err(controller::convert)
 }
 
+/// Service function for retrieving users by ids.
+pub async fn get_users_by_ids(conn: &TiraDbConn, user_ids: Vec<i64>) -> Result<Vec<User>, TiraErrorResponse> {
+    dao::users::get_users_by_ids(conn, user_ids)
+        .await
+        .map_err(controller::convert)
+}
+
 pub async fn get_users(
     conn: &TiraDbConn,
     filter_archived: Option<bool>,

@@ -8,11 +8,8 @@ pub mod create {
     use crate::schema::assignments;
     use crate::schema::categories;
     use crate::schema::comments;
-    use crate::schema::tickets;
     use crate::schema::users;
     use rocket::serde::Deserialize;
-
-    use super::Assignment;
 
     #[derive(Deserialize, Insertable)]
     #[table_name = "assignments"]

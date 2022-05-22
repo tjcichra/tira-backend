@@ -53,6 +53,21 @@ pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<User
         .await
 }
 
+/// DAO function for retrieving users by ids.
+pub async fn get_users_by_ids(conn: &TiraDbConn, user_ids: Vec<i64>) -> QueryResult<Vec<User>> {
+    use crate::schema::users;
+
+    conn.run(move |c| {
+        let mut query = users::table.into_boxed();
+    
+        for user_id in user_ids {
+            query = query.or_filter(users::id.eq(user_id));
+        }
+
+        query.load(c)
+    }).await
+}
+
 /// DAO function for retrieving a user by username and password_hash.
 pub async fn get_user_by_username_and_password(
     conn: &TiraDbConn,
