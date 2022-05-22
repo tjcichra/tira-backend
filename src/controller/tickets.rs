@@ -1,13 +1,11 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
 use crate::models::patch::UpdateTicket;
 use crate::models::success::{
-    AlteredResourceResponse, CommentResponse, EditTicketResponse, TicketResponse,
-    TicketWithoutDescriptionResponse,
+    AlteredResourceResponse, CommentResponse, TicketResponse, TicketWithoutDescriptionResponse,
 };
-use crate::models::TicketWithoutDescription;
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-    Assignment, Comment, Ticket,
+    Assignment,
 };
 use crate::service::{self, tickets};
 use crate::TiraDbConn;
@@ -54,7 +52,7 @@ pub async fn create_assignment_by_ticket_id_endpoint(
         service::emails::send_email(&email_address, body);
     }
 
-    let message = format!("Successfully created assignment!");
+    let message = "Successfully created assignment!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: created_assignment_id,
@@ -92,7 +90,7 @@ pub async fn create_comment_by_ticket_id_endpoint(
     )
     .await?;
 
-    let message = format!("Successfully created comment!");
+    let message = "Successfully created comment!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: created_comment_id,
@@ -129,7 +127,7 @@ pub async fn create_ticket_endpoint(
         service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
             .await?;
 
-    let message = format!("Successfully created ticket!");
+    let message = "Successfully created ticket!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: created_ticket_id,
@@ -192,9 +190,10 @@ pub async fn get_ticket_by_id_endpoint(
 
     let assignments = service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
 
-    let assignee_ids: Vec<_> = assignments.iter().map(|assignment| {
-        return assignment.assignee_id;
-    }).collect();
+    let assignee_ids: Vec<_> = assignments
+        .iter()
+        .map(|assignment| assignment.assignee_id)
+        .collect();
 
     let assignees = service::users::get_users_by_ids(&conn, assignee_ids).await?;
 
@@ -207,7 +206,7 @@ pub async fn get_ticket_by_id_endpoint(
         status: ticket.status,
         created: ticket.created,
         reporter,
-        assignees
+        assignees,
     };
 
     Ok(controller::create_success_response_ok(ticket_response))
@@ -240,11 +239,13 @@ pub async fn get_tickets_endpoint(
             None => None,
         };
 
-        let assignments = service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
+        let assignments =
+            service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
 
-        let assignee_ids: Vec<_> = assignments.iter().map(|assignment| {
-            return assignment.assignee_id;
-        }).collect();
+        let assignee_ids: Vec<_> = assignments
+            .iter()
+            .map(|assignment| assignment.assignee_id)
+            .collect();
 
         let assignees = service::users::get_users_by_ids(&conn, assignee_ids).await?;
 
@@ -256,7 +257,7 @@ pub async fn get_tickets_endpoint(
             status: ticket.status.clone(),
             created: ticket.created,
             reporter,
-            assignees
+            assignees,
         };
 
         tickets_response.push(ticket_response);

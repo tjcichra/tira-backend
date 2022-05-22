@@ -1,11 +1,7 @@
 use crate::{
     controller::{self, TiraErrorResponse},
     dao,
-    models::{
-        create::CreateUser,
-        patch::{UpdateTicket, UpdateUser},
-        Assignment, User,
-    },
+    models::{create::CreateUser, patch::UpdateUser, Assignment, User},
     service, TiraDbConn,
 };
 

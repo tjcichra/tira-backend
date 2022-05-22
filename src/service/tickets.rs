@@ -8,8 +8,7 @@ use crate::{
     },
     service, TiraDbConn,
 };
-use diesel::result::Error as QueryError;
-use rocket::{http::Status, response::status::Custom, serde::json::Json};
+use rocket::http::Status;
 
 /// Service function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(

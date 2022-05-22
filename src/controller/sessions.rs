@@ -71,7 +71,7 @@ pub async fn logout_endpoint(
     service::sessions::logout(&conn, user_id).await?;
     cookies.remove(Cookie::named(TIRA_AUTH_COOKIE));
 
-    let message = format!("Successfully logged out user!");
+    let message = "Successfully logged out user!".to_string();
     let response = StandardResponse { message };
     Ok(controller::create_success_response_ok(response))
 }

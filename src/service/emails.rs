@@ -1,12 +1,8 @@
 use std::env;
 
 use lettre::{
-    message::{
-        header::{ContentTransferEncoding, ContentType},
-        Attachment, Body, MultiPartBuilder, SinglePart,
-    },
-    transport::smtp::authentication::Credentials,
-    Message, SmtpTransport, Transport,
+    message::SinglePart, transport::smtp::authentication::Credentials, Message, SmtpTransport,
+    Transport,
 };
 
 use crate::models::{Ticket, User};

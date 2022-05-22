@@ -1,4 +1,4 @@
-use crate::models::{Assignment, Category, User};
+use crate::models::{Category, User};
 use chrono::NaiveDateTime;
 use rocket::serde::Serialize;
 
@@ -41,7 +41,7 @@ pub struct TicketResponse {
     pub status: String,
     pub created: NaiveDateTime,
     pub reporter: User,
-    pub assignees: Vec<User>
+    pub assignees: Vec<User>,
 }
 
 #[derive(Serialize)]
@@ -54,5 +54,5 @@ pub struct TicketWithoutDescriptionResponse {
     pub status: String,
     pub created: NaiveDateTime,
     pub reporter: User,
-    pub assignees: Vec<User>
+    pub assignees: Vec<User>,
 }

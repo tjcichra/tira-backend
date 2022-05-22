@@ -27,7 +27,7 @@ pub async fn patch_comment_by_id_endpoint(
     controller::authentication(&conn, cookies).await?;
     service::comments::update_comment_by_id(&conn, update_comment_json.0, comment_id).await?;
 
-    let message = format!("Successfully edited comment!");
+    let message = "Successfully edited comment!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: comment_id,

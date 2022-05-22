@@ -1,8 +1,8 @@
 use crate::controller::TiraResponse;
 use crate::models::patch::UpdateUser;
 use crate::models::success::AlteredResourceResponse;
+use crate::models::Assignment;
 use crate::models::{create::CreateUser, User};
-use crate::models::{Assignment, TicketWithoutDescription};
 use crate::service;
 use crate::TiraDbConn;
 use rocket::http::{CookieJar, Status};
@@ -24,7 +24,7 @@ pub async fn archive_user_by_id_endpoint(
     controller::authentication(&conn, cookies).await?;
     service::users::archive_user_by_id(&conn, user_id).await?;
 
-    let message = format!("Successfully archived user!");
+    let message = "Successfully archived user!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: user_id,
@@ -55,7 +55,7 @@ pub async fn create_user_endpoint(
 
     let created_user_id = service::users::create_user(&conn, user_json).await?;
 
-    let message = format!("Successfully created user!");
+    let message = "Successfully created user!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: created_user_id,
@@ -141,7 +141,7 @@ pub async fn patch_user_by_id_endpoint(
 
     service::users::update_user_by_id(&conn, update_user, user_id).await?;
 
-    let message = format!("Successfully edited user!");
+    let message = "Successfully edited user!".to_string();
     let response = AlteredResourceResponse {
         message,
         id: user_id,

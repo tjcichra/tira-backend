@@ -79,29 +79,6 @@ pub fn not_found(req: &Request) -> content::Custom<Json<TiraMessage>> {
     )
 }
 
-/// Method for
-fn standardize_response<T, E: Into<TiraMessage>>(
-    result: Result<T, E>,
-    success_status: Status,
-) -> TiraResponse<T> {
-    result
-        .map(|value| status::Custom(success_status, Json(value)))
-        .map_err(|err| {
-            let error = err.into();
-            status::Custom(Status::InternalServerError, Json(error))
-        })
-}
-
-fn standardize_response_ok<T, E: Into<TiraMessage>>(result: Result<T, E>) -> TiraResponse<T> {
-    standardize_response(result, Status::Ok)
-}
-
-fn standardize_error_response<T, E: Into<TiraMessage>>(
-    result: Result<T, E>,
-) -> Result<T, TiraErrorResponse> {
-    result.map_err(|err| status::Custom(Status::InternalServerError, Json(err.into())))
-}
-
 /// Service method that checks for authentication given a user's cookies
 ///
 /// Returns the user id of that user if they are authenticated or returns an error response

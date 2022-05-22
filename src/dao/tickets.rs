@@ -7,7 +7,7 @@ use crate::{
     TiraDbConn,
 };
 use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, query_dsl::methods::BoxedDsl};
+use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 /// DAO function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
@@ -196,7 +196,7 @@ pub async fn update_ticket_by_id(
                 dsl::description.eq(ticket.description),
                 dsl::category_id.eq(ticket.category_id),
                 priority,
-                status
+                status,
             ))
             .execute(c)
     })
