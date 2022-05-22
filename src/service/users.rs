@@ -60,7 +60,7 @@ pub async fn get_users(
         .map_err(controller::convert)
 }
 
-/// Service function for updating a user by id. test
+/// Service function for updating a user by id.
 pub async fn update_user_by_id(
     conn: &TiraDbConn,
     user: UpdateUser,
