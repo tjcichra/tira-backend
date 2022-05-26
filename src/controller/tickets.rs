@@ -272,9 +272,12 @@ pub async fn get_tickets_endpoint(
 #[patch("/tickets/<ticket_id>", data = "<update_ticket_json>")]
 pub async fn patch_ticket_by_id_endpoint(
     conn: TiraDbConn,
+    cookies: &CookieJar<'_>,
     update_ticket_json: Json<UpdateTicket>,
     ticket_id: i64,
 ) -> TiraResponse<AlteredResourceResponse> {
+    controller::authentication(&conn, cookies).await?;
+
     service::tickets::update_ticket_by_id(&conn, update_ticket_json.0, ticket_id).await?;
 
     let message = "Successfully edited ticket!".to_string();
