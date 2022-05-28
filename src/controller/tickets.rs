@@ -47,9 +47,10 @@ pub async fn create_assignment_by_ticket_id_endpoint(
         let assigner = service::users::get_user_by_id(&conn, user_id).await?;
         let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
 
-        let body = service::emails::create_assignment_email_text(assigner, ticket);
+        let body =
+            service::emails::create_assignment_email_body(&assigner, &ticket.subject, ticket.id);
 
-        service::emails::send_email(&email_address, body);
+        service::emails::send_email(&email_address, &ticket.subject, body);
     }
 
     let message = "Successfully created assignment!".to_string();
@@ -122,10 +123,56 @@ pub async fn create_ticket_endpoint(
     cookies: &CookieJar<'_>,
     create_ticket_json: Json<CreateTicket>,
 ) -> Result<Custom<Json<AlteredResourceResponse>>, Custom<Json<TiraMessage>>> {
-    let user_id = controller::authentication(&conn, cookies).await?;
+    let create_ticket = create_ticket_json.0;
+
+    let reporter_id = controller::authentication(&conn, cookies).await?;
     let created_ticket_id =
-        service::tickets::create_ticket_by_reporter_id(&conn, create_ticket_json.0, user_id)
+        service::tickets::create_ticket_by_reporter_id(&conn, create_ticket.clone(), reporter_id)
             .await?;
+
+    let reporter = service::users::get_user_by_id(&conn, reporter_id).await?;
+
+    // Email users about new ticket (except for reporter)
+    let users = service::users::get_users(&conn, Some(false)).await?;
+    for user in users {
+        if user.id != reporter_id {
+            if let Some(email_address) = user.email_address {
+                let body = service::emails::create_ticket_creation_email_body(
+                    &reporter,
+                    &create_ticket.subject,
+                    &create_ticket
+                        .description
+                        .clone()
+                        .map_or(String::new(), |description| {
+                            format!("<p>{}</p>", description)
+                        }),
+                    created_ticket_id,
+                );
+
+                service::emails::send_email(&email_address, &create_ticket.subject, body);
+            }
+        }
+    }
+
+    // Email assignees about new ticket (except for reporter if self assigned)
+    let assignee_ids: Vec<_> = create_ticket.assignee_ids;
+    if !assignee_ids.is_empty() {
+        let assignees = service::users::get_users_by_ids(&conn, assignee_ids).await?;
+
+        for assignee in assignees {
+            if assignee.id != reporter_id {
+                if let Some(email_address) = assignee.email_address {
+                    let body = service::emails::create_assignment_email_body(
+                        &reporter,
+                        &create_ticket.subject,
+                        created_ticket_id,
+                    );
+
+                    service::emails::send_email(&email_address, &create_ticket.subject, body);
+                }
+            }
+        }
+    }
 
     let message = "Successfully created ticket!".to_string();
     let response = AlteredResourceResponse {

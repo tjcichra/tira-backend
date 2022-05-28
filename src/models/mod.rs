@@ -33,7 +33,7 @@ pub mod create {
         pub content: String,
     }
 
-    #[derive(Deserialize)]
+    #[derive(Clone, Deserialize)]
     #[serde(crate = "rocket::serde")]
     pub struct CreateTicket {
         pub category_id: Option<i64>,
