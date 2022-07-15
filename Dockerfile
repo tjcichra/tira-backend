@@ -1,4 +1,4 @@
-FROM ghcr.io/jrcichra/sccache-rust:sha-959b66f as builder
+FROM ghcr.io/jrcichra/sccache-rust:sha-240e206 as builder
 ARG SCCACHE_BUCKET
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
