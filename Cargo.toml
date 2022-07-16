@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aws-config = "0.6.0"
-aws-sdk-s3 = "0.6.0"
+aws-config = "0.15.0"
+aws-sdk-s3 = "0.15.0"
+cookie = "0.16.0"
 rocket = { version = "0.5.0-rc.1", features = ["json"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 diesel = { version = "1.4.8", features = ["chrono", "postgres"] }
@@ -15,5 +16,5 @@ dotenv = "0.15.0"
 lettre = "0.10.0-rc.5"
 rocket_sync_db_pools = { version = "0.1.0-rc.1", default-features = false, features = ["diesel_postgres_pool"] }
 rust-crypto = "0.2.36"
-time = "0.2.11"
-uuid = { version = "0.8.2", features = ["v4"] }
+time = { version = "0.2.27", features = ["std"] }
+uuid = { version = "1.1.2", features = ["v4"] }

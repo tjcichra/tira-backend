@@ -1,6 +1,7 @@
 use std::env;
 
-use aws_sdk_s3::{ByteStream, Client, Endpoint};
+use aws_sdk_s3::types::ByteStream;
+use aws_sdk_s3::{Client, Endpoint};
 
 /// Service function for uploading an image.
 pub async fn upload_image(file_name: &str, bytes: Vec<u8>) {
