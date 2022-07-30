@@ -1,7 +1,7 @@
 use crate::controller::TiraResponse;
 use crate::models::patch::UpdateUser;
-use crate::models::success::AlteredResourceResponse;
-use crate::models::Assignment;
+use crate::models::success::{AlteredResourceResponse, AssignmentResponse};
+use crate::models::TicketWithReporterAsUser;
 use crate::models::{create::CreateUser, User};
 use crate::service;
 use crate::TiraDbConn;
@@ -73,9 +73,51 @@ pub async fn create_user_endpoint(
 pub async fn get_assignments_by_user_id_endpoint(
     conn: TiraDbConn,
     user_id: i64,
-) -> TiraResponse<Vec<Assignment>> {
+) -> TiraResponse<Vec<AssignmentResponse>> {
     let assignments = service::users::get_assignments_by_user_id(&conn, user_id).await?;
-    Ok(controller::create_success_response_ok(assignments))
+
+    let mut ticket_ids = Vec::new();
+    let mut assigner_ids = Vec::new();
+
+    for assignment in &assignments {
+        ticket_ids.push(assignment.ticket_id);
+        assigner_ids.push(assignment.assigner_id);
+    }
+
+    let tickets = service::tickets::get_tickets_by_ids(&conn, ticket_ids).await?;
+    let assigners = service::users::get_users_by_ids(&conn, assigner_ids).await?;
+
+    let mut ticket_reporter_ids = Vec::new();
+
+    for ticket in &tickets {
+        ticket_reporter_ids.push(ticket.reporter_id);
+    }
+
+    let ticket_reporters = service::users::get_users_by_ids(&conn, ticket_reporter_ids).await?;
+
+    let mut assignment_responses = Vec::new();
+    for (index, assignment) in assignments.iter().enumerate() {
+        let ticket = &tickets[index];
+        let ticket_with_reporter_as_user = TicketWithReporterAsUser {
+            id: ticket.id,
+            subject: ticket.subject.clone(),
+            description: ticket.description.clone(),
+            category_id: ticket.category_id,
+            priority: ticket.priority.clone(),
+            status: ticket.status.clone(),
+            created: ticket.created,
+            reporter: ticket_reporters[index].clone(),
+        };
+
+        assignment_responses.push(AssignmentResponse {
+            id: assignment.id,
+            ticket: ticket_with_reporter_as_user,
+            assigner: assigners[index].clone(),
+            assigned: assignment.assigned,
+        });
+    }
+
+    Ok(controller::create_success_response_ok(assignment_responses))
 }
 
 /// Endpoint for retrieving the current user.

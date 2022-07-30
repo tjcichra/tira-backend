@@ -57,7 +57,7 @@ pub mod create {
     }
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct User {
     pub id: i64,
@@ -83,7 +83,7 @@ pub struct Category {
     pub archived: bool,
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Ticket {
     pub id: i64,
@@ -94,6 +94,19 @@ pub struct Ticket {
     pub status: String,
     pub created: NaiveDateTime,
     pub reporter_id: i64,
+}
+
+#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct TicketWithReporterAsUser {
+    pub id: i64,
+    pub subject: String,
+    pub description: Option<String>,
+    pub category_id: Option<i64>,
+    pub priority: String,
+    pub status: String,
+    pub created: NaiveDateTime,
+    pub reporter: User,
 }
 
 #[derive(Queryable, Serialize)]

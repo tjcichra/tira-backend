@@ -82,14 +82,35 @@ pub async fn create_comment_by_ticket_id_endpoint(
     create_comment_json: Json<CreateComment>,
     ticket_id: i64,
 ) -> TiraResponse<AlteredResourceResponse> {
-    let user_id = controller::authentication(&conn, cookies).await?;
+    let commenter_id = controller::authentication(&conn, cookies).await?;
+    let commenter = service::users::get_user_by_id(&conn, commenter_id).await?;
+    let content = create_comment_json.0.content.clone();
+
     let created_comment_id = tickets::create_comment_by_ticket_id_and_commenter_id(
         &conn,
         create_comment_json.0,
         ticket_id,
-        user_id,
+        commenter_id,
     )
     .await?;
+
+    // Email all users about new comment (except for commenter)
+    let users = service::users::get_users(&conn, None).await?;
+    let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
+    for user in users {
+        if user.id != commenter_id {
+            if let Some(email_address) = user.email_address {
+                let body = service::emails::create_comment_email_body(
+                    &commenter,
+                    &content,
+                    &ticket.subject,
+                    ticket_id,
+                );
+
+                service::emails::send_email(&email_address, &ticket.subject, body);
+            }
+        }
+    }
 
     let message = "Successfully created comment!".to_string();
     let response = AlteredResourceResponse {

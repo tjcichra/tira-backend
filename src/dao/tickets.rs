@@ -145,6 +145,25 @@ pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<
         .await
 }
 
+/// DAO function for retrieving tickets by ids.
+pub async fn get_tickets_by_ids(
+    conn: &TiraDbConn,
+    ticket_ids: Vec<i64>,
+) -> QueryResult<Vec<Ticket>> {
+    use crate::schema::tickets;
+
+    conn.run(move |c| {
+        let mut query = tickets::table.into_boxed();
+
+        for ticket_id in ticket_ids {
+            query = query.or_filter(tickets::id.eq(ticket_id));
+        }
+
+        query.load(c)
+    })
+    .await
+}
+
 /// DAO function for retrieving all tickets.
 pub async fn get_tickets(
     conn: &TiraDbConn,

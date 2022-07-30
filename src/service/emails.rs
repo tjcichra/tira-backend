@@ -51,6 +51,24 @@ pub fn create_assignment_email_body(
     )
 }
 
+pub fn create_comment_email_body(
+    commenter: &User,
+    comment_content: &str,
+    ticket_subject: &str,
+    ticket_id: i64,
+) -> String {
+    let commenter_name = get_display_name(commenter);
+
+    format!(
+        "<p>{} added a comment to ticket '{}'.</p><p>{}</p><p><a href=\"{}/{}\">Link to ticket</a></p>",
+        commenter_name,
+        ticket_subject,
+        comment_content,
+        env::var("TIRA_EMAIL_TICKET_LINK").unwrap(),
+        ticket_id
+    )
+}
+
 pub fn create_ticket_creation_email_body(
     creator: &User,
     ticket_subject: &str,

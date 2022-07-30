@@ -3,6 +3,7 @@
 
 # Misc
 .env
+.data
 
 # yarn
 node_modules

@@ -113,6 +113,16 @@ pub async fn get_ticket_by_id(
         .map_err(controller::convert)
 }
 
+/// Service function for retrieving tickets by ids.
+pub async fn get_tickets_by_ids(
+    conn: &TiraDbConn,
+    ticket_ids: Vec<i64>,
+) -> Result<Vec<Ticket>, TiraErrorResponse> {
+    dao::tickets::get_tickets_by_ids(conn, ticket_ids)
+        .await
+        .map_err(controller::convert)
+}
+
 /// Service function for retrieving all tickets.
 pub async fn get_tickets(
     conn: &TiraDbConn,

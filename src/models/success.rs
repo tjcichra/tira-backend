@@ -2,6 +2,8 @@ use crate::models::{Category, User};
 use chrono::NaiveDateTime;
 use rocket::serde::Serialize;
 
+use super::TicketWithReporterAsUser;
+
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct StandardResponse {
@@ -55,4 +57,13 @@ pub struct TicketWithoutDescriptionResponse {
     pub created: NaiveDateTime,
     pub reporter: User,
     pub assignees: Vec<User>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct AssignmentResponse {
+    pub id: i64,
+    pub ticket: TicketWithReporterAsUser,
+    pub assigner: User,
+    pub assigned: NaiveDateTime,
 }
