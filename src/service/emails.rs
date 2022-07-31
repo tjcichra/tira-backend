@@ -95,10 +95,16 @@ pub fn create_ticket_creation_email_body(
 }
 
 pub fn handle_emails(rx: Receiver<Email>) {
-    // TODO: be able to clean this up on shutdown
     loop {
-        let email = rx.recv().unwrap();
-        send_email(email);
+        match rx.recv() {
+            Ok(email) => {
+                send_email(email);
+            }
+            Err(e) => {
+                println!("Ending email queue: {}", e);
+                return;
+            }
+        }
     }
 }
 
