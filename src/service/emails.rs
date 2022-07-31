@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::mpsc::Receiver;
 
 use lettre::{
     message::SinglePart, transport::smtp::authentication::Credentials, Message, SmtpTransport,
@@ -6,6 +7,12 @@ use lettre::{
 };
 
 use crate::models::User;
+
+pub struct Email {
+    pub to: String,
+    pub subject: String,
+    pub body: String,
+}
 
 fn get_real_name_display(user: &User) -> String {
     let mut real_name_display = String::new();
@@ -87,20 +94,34 @@ pub fn create_ticket_creation_email_body(
     )
 }
 
-pub fn send_email(email_address: &str, subject: &str, body: String) {
+pub fn handle_emails(rx: Receiver<Email>) {
+    loop {
+        match rx.recv() {
+            Ok(email) => {
+                send_email(email);
+            }
+            Err(e) => {
+                println!("Ending email queue: {}", e);
+                return;
+            }
+        }
+    }
+}
+
+pub fn send_email(e: Email) {
     let email = Message::builder()
         .from(
             format!(
                 "{}@{}",
                 env::var("TIRA_EMAIL_USERNAME").unwrap(),
-                "jrcichra.dev"
+                env::var("TIRA_EMAIL_DOMAIN").unwrap()
             )
             .parse()
             .unwrap(),
         )
-        .to(email_address.parse().unwrap())
-        .subject(subject)
-        .singlepart(SinglePart::html(body))
+        .to(e.to.parse().unwrap())
+        .subject(e.subject)
+        .singlepart(SinglePart::html(e.body))
         .unwrap();
 
     let creds = Credentials::new(
@@ -109,7 +130,12 @@ pub fn send_email(email_address: &str, subject: &str, body: String) {
     );
 
     // Open a remote connection to gmail
-    let mailer = SmtpTransport::starttls_relay(&env::var("TIRA_EMAIL_URL").unwrap())
+    let mail_domain = format!(
+        "{}.{}",
+        env::var("TIRA_EMAIL_SUBDOMAIN").unwrap(),
+        env::var("TIRA_EMAIL_DOMAIN").unwrap()
+    );
+    let mailer = SmtpTransport::starttls_relay(&mail_domain)
         .unwrap()
         .port(env::var("TIRA_EMAIL_SMTP_PORT").unwrap().parse().unwrap())
         .credentials(creds)

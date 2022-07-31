@@ -9,9 +9,11 @@ use crate::models::{
 };
 use crate::service::{self, tickets};
 use crate::TiraDbConn;
+use crate::TiraState;
 use rocket::http::{CookieJar, Status};
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
+use rocket::State;
 
 /// Endpoint for creating an assignment for a ticket.
 ///
@@ -30,6 +32,7 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     cookies: &CookieJar<'_>,
     create_assignment_json: Json<CreateAssignmentWithUserId>,
     ticket_id: i64,
+    state: &State<TiraState>,
 ) -> TiraResponse<AlteredResourceResponse> {
     let user_id = controller::authentication(&conn, cookies).await?;
     let assignee_id = create_assignment_json.assignee_id;
@@ -50,7 +53,14 @@ pub async fn create_assignment_by_ticket_id_endpoint(
         let body =
             service::emails::create_assignment_email_body(&assigner, &ticket.subject, ticket.id);
 
-        service::emails::send_email(&email_address, &ticket.subject, body);
+        state
+            .email_tx
+            .send(service::emails::Email {
+                to: email_address,
+                subject: ticket.subject,
+                body: body,
+            })
+            .unwrap();
     }
 
     let message = "Successfully created assignment!".to_string();
@@ -81,6 +91,7 @@ pub async fn create_comment_by_ticket_id_endpoint(
     cookies: &CookieJar<'_>,
     create_comment_json: Json<CreateComment>,
     ticket_id: i64,
+    state: &State<TiraState>,
 ) -> TiraResponse<AlteredResourceResponse> {
     let commenter_id = controller::authentication(&conn, cookies).await?;
     let commenter = service::users::get_user_by_id(&conn, commenter_id).await?;
@@ -107,7 +118,14 @@ pub async fn create_comment_by_ticket_id_endpoint(
                     ticket_id,
                 );
 
-                service::emails::send_email(&email_address, &ticket.subject, body);
+                state
+                    .email_tx
+                    .send(service::emails::Email {
+                        to: email_address,
+                        subject: ticket.subject.clone(),
+                        body: body,
+                    })
+                    .unwrap();
             }
         }
     }
@@ -143,6 +161,7 @@ pub async fn create_ticket_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
     create_ticket_json: Json<CreateTicket>,
+    state: &State<TiraState>,
 ) -> Result<Custom<Json<AlteredResourceResponse>>, Custom<Json<TiraMessage>>> {
     let create_ticket = create_ticket_json.0;
 
@@ -170,7 +189,14 @@ pub async fn create_ticket_endpoint(
                     created_ticket_id,
                 );
 
-                service::emails::send_email(&email_address, &create_ticket.subject, body);
+                state
+                    .email_tx
+                    .send(service::emails::Email {
+                        to: email_address,
+                        subject: create_ticket.subject.clone(),
+                        body: body,
+                    })
+                    .unwrap();
             }
         }
     }
@@ -188,8 +214,14 @@ pub async fn create_ticket_endpoint(
                         &create_ticket.subject,
                         created_ticket_id,
                     );
-
-                    service::emails::send_email(&email_address, &create_ticket.subject, body);
+                    state
+                        .email_tx
+                        .send(service::emails::Email {
+                            to: email_address,
+                            subject: create_ticket.subject.clone(),
+                            body: body,
+                        })
+                        .unwrap();
                 }
             }
         }
