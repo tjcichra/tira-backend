@@ -2160,6 +2160,7 @@ dependencies = [
  "diesel",
  "dotenv",
  "lettre",
+ "regex",
  "rocket",
  "rocket_sync_db_pools",
  "rust-crypto",

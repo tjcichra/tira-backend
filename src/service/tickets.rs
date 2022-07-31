@@ -8,6 +8,7 @@ use crate::{
     },
     service, TiraDbConn,
 };
+use regex::Regex;
 use rocket::http::Status;
 
 /// Service function for creating an assignment by ticket id and assigner id.
@@ -34,6 +35,16 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
     ticket_id: i64,
     commenter_id: i64,
 ) -> Result<i64, TiraErrorResponse> {
+    let regex = Regex::new(r"(</?[^>]+(>|$)|&nbsp;|\s)").unwrap();
+    let content_without_tags: String = regex.replace_all(&comment.content, "").into();
+
+    if content_without_tags.is_empty() {
+        return Err(controller::create_error_response(
+            Status::BadRequest,
+            "Comment cannot be blank!".to_string(),
+        ));
+    }
+
     dao::tickets::create_comment_by_ticket_id_and_commenter_id(
         conn,
         comment,
