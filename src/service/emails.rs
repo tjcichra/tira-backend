@@ -114,7 +114,7 @@ pub fn send_email(e: Email) {
             format!(
                 "{}@{}",
                 env::var("TIRA_EMAIL_USERNAME").unwrap(),
-                "jrcichra.dev"
+                env::var("TIRA_EMAIL_DOMAIN").unwrap()
             )
             .parse()
             .unwrap(),
@@ -130,7 +130,12 @@ pub fn send_email(e: Email) {
     );
 
     // Open a remote connection to gmail
-    let mailer = SmtpTransport::starttls_relay(&env::var("TIRA_EMAIL_URL").unwrap())
+    let mail_domain = format!(
+        "{}.{}",
+        env::var("TIRA_EMAIL_SUBDOMAIN").unwrap(),
+        env::var("TIRA_EMAIL_DOMAIN").unwrap()
+    );
+    let mailer = SmtpTransport::starttls_relay(&mail_domain)
         .unwrap()
         .port(env::var("TIRA_EMAIL_SMTP_PORT").unwrap().parse().unwrap())
         .credentials(creds)
