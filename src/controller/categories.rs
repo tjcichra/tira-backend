@@ -43,7 +43,7 @@ pub async fn create_category_endpoint(
     cookies: &CookieJar<'_>,
     create_category_json: Json<CreateCategory>,
 ) -> TiraResponse<AlteredResourceResponse> {
-    let user_id = controller::authentication(&conn, cookies).await?;
+    let (user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
     let category_id = categories::create_category(&conn, create_category_json.0, user_id).await?;
 
     let message = format!("Successfully created category with id {}", category_id);

@@ -53,13 +53,21 @@ pub async fn create_session_by_session_uuid_and_user_id(
     .await
 }
 
-/// DAO function for deleting sessions by user_id.
-pub async fn delete_sessions_by_user_id(
+/// DAO function for deleting sessions by user id and uuid.
+pub async fn delete_sessions_by_user_id_and_uuid(
     conn: &TiraDbConn,
-    user_id_parameter: i64,
+    user_id: i64,
+    uuid: String,
 ) -> QueryResult<usize> {
-    use crate::schema::sessions::dsl::*;
+    use crate::schema::sessions;
 
-    conn.run(move |c| diesel::delete(sessions.filter(user_id.eq(user_id_parameter))).execute(c))
-        .await
+    conn.run(move |c| {
+        diesel::delete(
+            sessions::dsl::sessions
+                .filter(sessions::dsl::user_id.eq(user_id))
+                .filter(sessions::dsl::uuid.eq(uuid)),
+        )
+        .execute(c)
+    })
+    .await
 }

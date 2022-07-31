@@ -130,7 +130,7 @@ pub async fn get_current_user_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
 ) -> TiraResponse<User> {
-    let user_id = controller::authentication(&conn, cookies).await?;
+    let (user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
 
     let assignments = service::users::get_user_by_id(&conn, user_id).await?;
     Ok(controller::create_success_response_ok(assignments))
@@ -172,7 +172,7 @@ pub async fn patch_user_by_id_endpoint(
     user_id: i64,
 ) -> TiraResponse<AlteredResourceResponse> {
     let update_user = update_user_json.0;
-    let current_user_id = controller::authentication(&conn, cookies).await?;
+    let (current_user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
 
     if user_id != current_user_id {
         return Err(controller::create_error_response(

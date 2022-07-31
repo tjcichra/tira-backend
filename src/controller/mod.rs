@@ -81,11 +81,11 @@ pub fn not_found(req: &Request) -> content::Custom<Json<TiraMessage>> {
 
 /// Service method that checks for authentication given a user's cookies
 ///
-/// Returns the user id of that user if they are authenticated or returns an error response
+/// Returns the user id of that user and their session uuid if they are authenticated or returns an error response
 async fn authentication(
     conn: &TiraDbConn,
     cookies: &CookieJar<'_>,
-) -> Result<i64, TiraErrorResponse> {
+) -> Result<(i64, String), TiraErrorResponse> {
     use crate::schema::sessions::dsl::*;
 
     let cookie = cookies.get(TIRA_AUTH_COOKIE);
@@ -93,7 +93,7 @@ async fn authentication(
     match cookie {
         Some(cookie) => {
             let session_uuid = cookie.value().to_string();
-            let session_uuid_2 = session_uuid.clone();
+            let session_uuid_clone = session_uuid.clone();
 
             let session = conn
                 .run(|c| sessions.filter(uuid.eq(session_uuid)).first::<Session>(c))
@@ -106,7 +106,7 @@ async fn authentication(
                             if Utc::now().naive_utc() > exp {
                                 // Delete expired session
                                 conn.run(|c| {
-                                    diesel::delete(sessions.filter(uuid.eq(session_uuid_2)))
+                                    diesel::delete(sessions.filter(uuid.eq(session_uuid_clone)))
                                         .execute(c)
                                 })
                                 .await
@@ -121,10 +121,10 @@ async fn authentication(
                                     }),
                                 ))
                             } else {
-                                Ok(session.user_id)
+                                Ok((session.user_id, session_uuid_clone))
                             }
                         }
-                        None => Ok(session.user_id),
+                        None => Ok((session.user_id, session_uuid_clone)),
                     }
                 }
                 Err(error) => Err(status::Custom(Status::Forbidden, Json(error.into()))),

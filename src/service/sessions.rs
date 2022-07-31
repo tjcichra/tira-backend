@@ -39,9 +39,14 @@ pub async fn login(
 }
 
 /// Service function for having a user log out.
-pub async fn logout(conn: &TiraDbConn, user_id: i64) -> Result<(), TiraErrorResponse> {
-    let sessions_deleted = dao::sessions::delete_sessions_by_user_id(conn, user_id)
-        .await
-        .map_err(controller::convert)?;
-    service::check_at_least_one_row_changed(sessions_deleted)
+pub async fn logout(
+    conn: &TiraDbConn,
+    user_id: i64,
+    session_uuid: String,
+) -> Result<(), TiraErrorResponse> {
+    let sessions_deleted =
+        dao::sessions::delete_sessions_by_user_id_and_uuid(conn, user_id, session_uuid)
+            .await
+            .map_err(controller::convert)?;
+    service::check_only_one_row_changed(sessions_deleted)
 }

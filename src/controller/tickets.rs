@@ -34,7 +34,7 @@ pub async fn create_assignment_by_ticket_id_endpoint(
     ticket_id: i64,
     state: &State<TiraState>,
 ) -> TiraResponse<AlteredResourceResponse> {
-    let user_id = controller::authentication(&conn, cookies).await?;
+    let (user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
     let assignee_id = create_assignment_json.assignee_id;
     let created_assignment_id = tickets::create_assignment_by_ticket_id_and_assigner_id(
         &conn,
@@ -93,7 +93,7 @@ pub async fn create_comment_by_ticket_id_endpoint(
     ticket_id: i64,
     state: &State<TiraState>,
 ) -> TiraResponse<AlteredResourceResponse> {
-    let commenter_id = controller::authentication(&conn, cookies).await?;
+    let (commenter_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
     let commenter = service::users::get_user_by_id(&conn, commenter_id).await?;
     let content = create_comment_json.0.content.clone();
 
@@ -165,7 +165,7 @@ pub async fn create_ticket_endpoint(
 ) -> Result<Custom<Json<AlteredResourceResponse>>, Custom<Json<TiraMessage>>> {
     let create_ticket = create_ticket_json.0;
 
-    let reporter_id = controller::authentication(&conn, cookies).await?;
+    let (reporter_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
     let created_ticket_id =
         service::tickets::create_ticket_by_reporter_id(&conn, create_ticket.clone(), reporter_id)
             .await?;

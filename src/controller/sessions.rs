@@ -67,8 +67,9 @@ pub async fn logout_endpoint(
     conn: TiraDbConn,
     cookies: &CookieJar<'_>,
 ) -> TiraResponse<StandardResponse> {
-    let user_id = controller::authentication(&conn, cookies).await?;
-    service::sessions::logout(&conn, user_id).await?;
+    let (user_id, session_uuid) = controller::authentication(&conn, cookies).await?;
+
+    service::sessions::logout(&conn, user_id, session_uuid).await?;
     cookies.remove(Cookie::named(TIRA_AUTH_COOKIE));
 
     let message = "Successfully logged out user!".to_string();
