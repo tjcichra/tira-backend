@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/
 COPY . .
 RUN (touch /tmp/sccache_log.txt && tail -f /tmp/sccache_log.txt &) && printenv && cargo build --release -j8
 
-FROM debian:bullseye-20220328-slim
-RUN apt-get update && apt-get install -y libpq-dev ca-certificates && rm -rf /var/lib/apt/lists/* && update-ca-certificates
+FROM gcr.io/distroless/base-debian11
 COPY --from=builder /usr/src/app/target/release/tira-backend /tira-backend
 CMD ["/tira-backend"]
