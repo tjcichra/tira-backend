@@ -43,5 +43,5 @@ pub async fn logout(conn: &TiraDbConn, user_id: i64) -> Result<(), TiraErrorResp
     let sessions_deleted = dao::sessions::delete_sessions_by_user_id(conn, user_id)
         .await
         .map_err(controller::convert)?;
-    service::check_only_one_row_changed(sessions_deleted)
+    service::check_at_least_one_row_changed(sessions_deleted)
 }

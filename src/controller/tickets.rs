@@ -58,7 +58,7 @@ pub async fn create_assignment_by_ticket_id_endpoint(
             .send(service::emails::Email {
                 to: email_address,
                 subject: ticket.subject,
-                body: body,
+                body,
             })
             .unwrap();
     }
@@ -123,7 +123,7 @@ pub async fn create_comment_by_ticket_id_endpoint(
                     .send(service::emails::Email {
                         to: email_address,
                         subject: ticket.subject.clone(),
-                        body: body,
+                        body,
                     })
                     .unwrap();
             }
@@ -194,7 +194,7 @@ pub async fn create_ticket_endpoint(
                     .send(service::emails::Email {
                         to: email_address,
                         subject: create_ticket.subject.clone(),
-                        body: body,
+                        body,
                     })
                     .unwrap();
             }
@@ -219,7 +219,7 @@ pub async fn create_ticket_endpoint(
                         .send(service::emails::Email {
                             to: email_address,
                             subject: create_ticket.subject.clone(),
-                            body: body,
+                            body,
                         })
                         .unwrap();
                 }
