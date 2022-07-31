@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::mpsc::Receiver;
 
 use lettre::{
     message::SinglePart, transport::smtp::authentication::Credentials, Message, SmtpTransport,
@@ -6,6 +7,12 @@ use lettre::{
 };
 
 use crate::models::User;
+
+pub struct Email {
+    pub to: String,
+    pub subject: String,
+    pub body: String,
+}
 
 fn get_real_name_display(user: &User) -> String {
     let mut real_name_display = String::new();
@@ -87,7 +94,15 @@ pub fn create_ticket_creation_email_body(
     )
 }
 
-pub fn send_email(email_address: &str, subject: &str, body: String) {
+pub fn handle_emails(rx: Receiver<Email>) {
+    // TODO: be able to clean this up on shutdown
+    loop {
+        let email = rx.recv().unwrap();
+        send_email(email);
+    }
+}
+
+pub fn send_email(e: Email) {
     let email = Message::builder()
         .from(
             format!(
@@ -98,9 +113,9 @@ pub fn send_email(email_address: &str, subject: &str, body: String) {
             .parse()
             .unwrap(),
         )
-        .to(email_address.parse().unwrap())
-        .subject(subject)
-        .singlepart(SinglePart::html(body))
+        .to(e.to.parse().unwrap())
+        .subject(e.subject)
+        .singlepart(SinglePart::html(e.body))
         .unwrap();
 
     let creds = Credentials::new(

@@ -1,3 +1,5 @@
+use crate::service::emails::handle_emails;
+use crate::service::emails::Email;
 use diesel::PgConnection;
 use dotenv::dotenv;
 use rocket::{
@@ -11,6 +13,7 @@ use rocket::{
 };
 use rocket_sync_db_pools::database;
 use std::env;
+use std::sync::mpsc;
 
 #[macro_use]
 extern crate diesel;
@@ -22,6 +25,10 @@ mod dao;
 mod models;
 mod schema;
 mod service;
+
+pub struct TiraState {
+    email_tx: mpsc::SyncSender<Email>,
+}
 
 #[database("tira_db")]
 pub struct TiraDbConn(PgConnection);
@@ -65,10 +72,17 @@ fn rocket() -> _ {
     };
     let figment = rocket::Config::figment().merge(("databases", map!["tira_db" => db]));
 
+    let (email_tx, email_rx) = mpsc::sync_channel(512);
+    // Listen for emails on the email queue
+    rocket::tokio::task::spawn(async move {
+        handle_emails(email_rx);
+    });
+
     // Set up rocket's customizations and endpoints.
     rocket::custom(figment)
         .attach(TiraDbConn::fairing())
         .attach(CORS)
+        .manage(TiraState { email_tx })
         .mount(
             "/",
             routes![
