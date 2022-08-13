@@ -376,9 +376,13 @@ pub async fn patch_ticket_by_id_endpoint(
     update_ticket_json: Json<UpdateTicket>,
     ticket_id: i64,
 ) -> TiraResponse<AlteredResourceResponse> {
-    controller::authentication(&conn, cookies).await?;
+    let (user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
 
-    service::tickets::update_ticket_by_id(&conn, update_ticket_json.0, ticket_id).await?;
+    service::tickets::update_ticket_by_id(&conn, update_ticket_json.0.clone(), ticket_id).await?;
+    if let Some(assignee_ids) = update_ticket_json.0.assignee_ids {
+        service::tickets::update_assignments_by_ticket_id(&conn, ticket_id, assignee_ids, user_id)
+            .await?;
+    }
 
     let message = "Successfully edited ticket!".to_string();
     let response = AlteredResourceResponse {

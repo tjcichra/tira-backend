@@ -152,6 +152,10 @@ pub async fn get_tickets_by_ids(
 ) -> QueryResult<Vec<Ticket>> {
     use crate::schema::tickets;
 
+    if ticket_ids.is_empty() {
+        return Ok(vec![]);
+    }
+
     conn.run(move |c| {
         let mut query = tickets::table.into_boxed();
 
@@ -203,17 +207,19 @@ pub async fn update_ticket_by_id(
     ticket_id: i64,
 ) -> QueryResult<usize> {
     conn.run(move |c| {
-        use crate::schema::tickets::dsl;
+        use crate::schema::tickets;
 
-        let subject = ticket.subject.map(|subject| dsl::subject.eq(subject));
-        let priority = ticket.priority.map(|priority| dsl::priority.eq(priority));
-        let status = ticket.status.map(|status| dsl::status.eq(status));
+        let subject = ticket.subject.map(|subject| tickets::subject.eq(subject));
+        let priority = ticket
+            .priority
+            .map(|priority| tickets::priority.eq(priority));
+        let status = ticket.status.map(|status| tickets::status.eq(status));
 
-        diesel::update(dsl::tickets.filter(dsl::id.eq(ticket_id)))
+        diesel::update(tickets::dsl::tickets.filter(tickets::id.eq(ticket_id)))
             .set((
                 subject,
-                dsl::description.eq(ticket.description),
-                dsl::category_id.eq(ticket.category_id),
+                tickets::description.eq(ticket.description),
+                tickets::category_id.eq(ticket.category_id),
                 priority,
                 status,
             ))

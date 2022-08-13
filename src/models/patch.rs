@@ -3,7 +3,7 @@ use rocket::serde::Deserialize;
 use crate::schema::comments;
 use crate::schema::users;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct UpdateTicket {
     pub category_id: Option<i64>,

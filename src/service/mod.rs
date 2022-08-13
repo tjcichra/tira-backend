@@ -22,3 +22,13 @@ pub fn check_only_one_row_changed(rows_changed: usize) -> Result<(), TiraErrorRe
         )),
     }
 }
+
+pub fn _check_at_least_one_row_changed(rows_changed: usize) -> Result<(), TiraErrorResponse> {
+    if let Ordering::Less = rows_changed.cmp(&1) {
+        Err(controller::create_error_response_500(
+            "No row was affected".into(),
+        ))
+    } else {
+        Ok(())
+    }
+}

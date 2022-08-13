@@ -156,3 +156,16 @@ pub async fn update_ticket_by_id(
         .map_err(controller::convert)?;
     service::check_only_one_row_changed(tickets_updated)
 }
+
+/// Service function for updating assignments by ticket id.
+pub async fn update_assignments_by_ticket_id(
+    conn: &TiraDbConn,
+    ticket_id: i64,
+    assignee_ids: Vec<i64>,
+    assigner_id: i64,
+) -> Result<(), TiraErrorResponse> {
+    dao::assignments::update_assignments_by_ticket_id(conn, ticket_id, assignee_ids, assigner_id)
+        .await
+        .map_err(controller::convert)?;
+    Ok(())
+}
