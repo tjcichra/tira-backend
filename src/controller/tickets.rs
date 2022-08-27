@@ -286,6 +286,12 @@ pub async fn get_ticket_by_id_endpoint(
     ticket_id: i64,
 ) -> TiraResponse<TicketResponse> {
     let ticket = service::tickets::get_ticket_by_id(&conn, ticket_id).await?;
+
+    let category = if let Some(category_id) = ticket.category_id {
+        Some(service::categories::get_category_by_id(&conn, category_id).await?)
+    } else {
+        None
+    };
     let reporter = service::users::get_user_by_id(&conn, ticket.reporter_id).await?;
 
     let assignments = service::assignments::get_assignments(&conn, None, Some(ticket.id)).await?;
@@ -301,7 +307,7 @@ pub async fn get_ticket_by_id_endpoint(
         id: ticket.id,
         subject: ticket.subject,
         description: ticket.description,
-        category_id: ticket.category_id,
+        category,
         priority: ticket.priority,
         status: ticket.status,
         created: ticket.created,

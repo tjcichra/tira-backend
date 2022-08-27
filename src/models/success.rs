@@ -38,7 +38,7 @@ pub struct TicketResponse {
     pub id: i64,
     pub subject: String,
     pub description: Option<String>,
-    pub category_id: Option<i64>,
+    pub category: Option<Category>,
     pub priority: String,
     pub status: String,
     pub created: NaiveDateTime,
