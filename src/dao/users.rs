@@ -7,11 +7,11 @@ use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
 
 /// DAO function for archiving a user by id.
 pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<usize> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
     conn.run(move |c| {
-        diesel::update(users.filter(id.eq(user_id)))
-            .set(archived.eq(true))
+        diesel::update(users::table.filter(users::id.eq(user_id)))
+            .set(users::archived.eq(true))
             .execute(c)
     })
     .await
@@ -19,12 +19,12 @@ pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<
 
 /// DAO function for creating a user.
 pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> QueryResult<i64> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
     conn.run(move |c| {
-        diesel::insert_into(users)
-            .values((&user, created.eq(Utc::now().naive_utc())))
-            .returning(id)
+        diesel::insert_into(users::table)
+            .values((&user, users::created.eq(Utc::now().naive_utc())))
+            .returning(users::id)
             .get_result(c)
     })
     .await
@@ -35,11 +35,11 @@ pub async fn get_assignments_by_user_id(
     conn: &TiraDbConn,
     user_id: i64,
 ) -> QueryResult<Vec<Assignment>> {
-    use crate::schema::assignments::dsl::*;
+    use crate::schema::assignments;
 
     conn.run(move |c| {
-        assignments
-            .filter(assignee_id.eq(user_id))
+        assignments::table
+            .filter(assignments::assignee_id.eq(user_id))
             .load::<Assignment>(c)
     })
     .await
@@ -47,9 +47,9 @@ pub async fn get_assignments_by_user_id(
 
 /// DAO function for retrieving a user by id.
 pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<User> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
-    conn.run(move |c| users.filter(id.eq(user_id)).first::<User>(c))
+    conn.run(move |c| users::table.filter(users::id.eq(user_id)).first::<User>(c))
         .await
 }
 
@@ -78,12 +78,12 @@ pub async fn get_user_by_username_and_password(
     conn: &TiraDbConn,
     login_info: Login,
 ) -> QueryResult<User> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
     conn.run(move |c| {
-        users
-            .filter(username.eq(login_info.username))
-            .filter(password.eq(login_info.password))
+        users::table
+            .filter(users::username.eq(login_info.username))
+            .filter(users::password.eq(login_info.password))
             .first::<User>(c)
     })
     .await
@@ -91,14 +91,18 @@ pub async fn get_user_by_username_and_password(
 
 /// DAO function for retrieving all users.
 pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> QueryResult<Vec<User>> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
     match filter_archived {
         Some(filter_archived) => {
-            conn.run(move |c| users.filter(archived.eq(filter_archived)).load::<User>(c))
-                .await
+            conn.run(move |c| {
+                users::table
+                    .filter(users::archived.eq(filter_archived))
+                    .load::<User>(c)
+            })
+            .await
         }
-        None => conn.run(|c| users.load(c)).await,
+        None => conn.run(|c| users::table.load(c)).await,
     }
 }
 
@@ -108,10 +112,10 @@ pub async fn update_user_by_id(
     user: UpdateUser,
     user_id: i64,
 ) -> QueryResult<usize> {
-    use crate::schema::users::dsl::*;
+    use crate::schema::users;
 
     conn.run(move |c| {
-        diesel::update(users.filter(id.eq(user_id)))
+        diesel::update(users::table.filter(users::id.eq(user_id)))
             .set(user)
             .execute(c)
     })

@@ -10,10 +10,10 @@ pub async fn update_comment_by_id(
     comment: UpdateComment,
     comment_id: i64,
 ) -> QueryResult<usize> {
-    use crate::schema::comments::dsl::{comments, id};
+    use crate::schema::comments;
 
     conn.run(move |c| {
-        diesel::update(comments.filter(id.eq(comment_id)))
+        diesel::update(comments::table.filter(comments::id.eq(comment_id)))
             .set(comment)
             .execute(c)
     })
