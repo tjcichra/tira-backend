@@ -21,7 +21,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=ghcr.io/tjcichra/tira-backend
+          DOCKER_IMAGE=ghcr.io/tjcichra/tira_backend
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -63,8 +63,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
-          cache-from: type=registry,ref=ghcr.io/tjcichra/tira-backend:buildcache
-          cache-to: type=registry,ref=ghcr.io/tjcichra/tira-backend:buildcache,mode=max
+          cache-from: type=registry,ref=ghcr.io/tjcichra/tira_backend:buildcache
+          cache-to: type=registry,ref=ghcr.io/tjcichra/tira_backend:buildcache,mode=max
           labels: |
             org.opencontainers.image.title=${{ fromJson(steps.repo.outputs.result).name }}
             org.opencontainers.image.description=${{ fromJson(steps.repo.outputs.result).description }}
