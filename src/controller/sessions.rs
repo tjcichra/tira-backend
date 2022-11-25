@@ -53,10 +53,6 @@ pub async fn login_endpoint(
     ))
 }
 
-/// OPTIONS endpoint for login.
-#[options("/login")]
-pub async fn login_options_endpoint() {}
-
 /// Endpoint for logging out.
 ///
 /// **POST /logout**

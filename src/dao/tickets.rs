@@ -175,6 +175,8 @@ pub async fn get_tickets_by_ids(
 /// DAO function for retrieving all tickets.
 pub async fn get_tickets(
     conn: &TiraDbConn,
+    limit: Option<i64>,
+    offset: Option<i64>,
     filter_reporter_id: Option<i64>,
     filter_open: Option<bool>,
 ) -> QueryResult<Vec<TicketWithoutDescription>> {
@@ -182,6 +184,14 @@ pub async fn get_tickets(
 
     conn.run(move |c| {
         let mut query = tickets::table.into_boxed();
+
+        if let Some(limit) = limit {
+            query = query.limit(limit);
+        }
+
+        if let Some(offset) = offset {
+            query = query.offset(offset);
+        }
 
         if let Some(filter_reporter_id) = filter_reporter_id {
             query = query.filter(tickets::reporter_id.eq(filter_reporter_id));

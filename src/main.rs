@@ -95,7 +95,6 @@ fn rocket() -> _ {
                 controller::images::retrieve_image_endpoint,
                 controller::images::upload_image_endpoint,
                 controller::sessions::login_endpoint,
-                controller::sessions::login_options_endpoint,
                 controller::sessions::logout_endpoint,
                 controller::tickets::create_assignment_by_ticket_id_endpoint,
                 controller::tickets::create_comment_by_ticket_id_endpoint,

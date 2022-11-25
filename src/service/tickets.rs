@@ -137,10 +137,12 @@ pub async fn get_tickets_by_ids(
 /// Service function for retrieving all tickets.
 pub async fn get_tickets(
     conn: &TiraDbConn,
+    limit: Option<i64>,
+    offset: Option<i64>,
     filter_reporter_id: Option<i64>,
     filter_open: Option<bool>,
 ) -> Result<Vec<TicketWithoutDescription>, TiraErrorResponse> {
-    dao::tickets::get_tickets(conn, filter_reporter_id, filter_open)
+    dao::tickets::get_tickets(conn, limit, offset, filter_reporter_id, filter_open)
         .await
         .map_err(controller::convert)
 }
