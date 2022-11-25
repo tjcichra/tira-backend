@@ -141,10 +141,16 @@ pub async fn get_tickets(
     offset: Option<i64>,
     filter_reporter_id: Option<i64>,
     filter_open: Option<bool>,
-) -> Result<Vec<TicketWithoutDescription>, TiraErrorResponse> {
-    dao::tickets::get_tickets(conn, limit, offset, filter_reporter_id, filter_open)
+) -> Result<(Vec<TicketWithoutDescription>, i64), TiraErrorResponse> {
+    let tickets = dao::tickets::get_tickets(conn, limit, offset, filter_reporter_id, filter_open)
         .await
-        .map_err(controller::convert)
+        .map_err(controller::convert)?;
+
+    let total_count = dao::tickets::get_total_ticket_count(conn)
+        .await
+        .map_err(controller::convert)?;
+
+    Ok((tickets, total_count))
 }
 
 /// Service function for updating a ticket by id.

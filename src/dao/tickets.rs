@@ -214,6 +214,13 @@ pub async fn get_tickets(
     .await
 }
 
+/// DAO function for retrieving the total ticket count.
+pub async fn get_total_ticket_count(conn: &TiraDbConn) -> QueryResult<i64> {
+    use crate::schema::tickets;
+
+    conn.run(|c| tickets::table.count().get_result(c)).await
+}
+
 /// DAO function for updating a ticket by id.
 pub async fn update_ticket_by_id(
     conn: &TiraDbConn,

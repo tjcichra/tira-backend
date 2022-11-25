@@ -48,6 +48,13 @@ pub struct TicketResponse {
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
+pub struct CountResponse<T> {
+    pub data: Vec<T>,
+    pub total_count: i64,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct TicketWithoutDescriptionResponse {
     pub id: i64,
     pub subject: String,

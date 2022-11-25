@@ -1,7 +1,8 @@
 use crate::controller::{self, TiraMessage, TiraResponse};
 use crate::models::patch::UpdateTicket;
 use crate::models::success::{
-    AlteredResourceResponse, CommentResponse, TicketResponse, TicketWithoutDescriptionResponse,
+    AlteredResourceResponse, CommentResponse, CountResponse, TicketResponse,
+    TicketWithoutDescriptionResponse,
 };
 use crate::models::{
     create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
@@ -335,8 +336,8 @@ pub async fn get_tickets_endpoint(
     offset: Option<i64>,
     reporter: Option<i64>,
     open: Option<bool>,
-) -> TiraResponse<Vec<TicketWithoutDescriptionResponse>> {
-    let tickets = tickets::get_tickets(&conn, limit, offset, reporter, open).await?;
+) -> TiraResponse<CountResponse<TicketWithoutDescriptionResponse>> {
+    let (tickets, total_count) = tickets::get_tickets(&conn, limit, offset, reporter, open).await?;
     let mut tickets_response = Vec::new();
 
     for ticket in tickets {
@@ -373,7 +374,12 @@ pub async fn get_tickets_endpoint(
         tickets_response.push(ticket_response);
     }
 
-    Ok(controller::create_success_response_ok(tickets_response))
+    let response = CountResponse {
+        data: tickets_response,
+        total_count,
+    };
+
+    Ok(controller::create_success_response_ok(response))
 }
 
 /// Endpoint for updating a ticket.
