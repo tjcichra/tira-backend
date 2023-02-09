@@ -4,10 +4,14 @@ use crate::{
         patch::UpdateTicket,
         Assignment, Comment, Ticket, TicketWithoutDescription,
     },
+    schema::tickets::BoxedQuery,
     TiraDbConn,
 };
 use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use diesel::{
+    pg::Pg, query_builder::QueryFragment, AppearsOnTable, ExpressionMethods, QueryDsl, QueryResult,
+    RunQueryDsl,
+};
 
 /// DAO function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
@@ -179,6 +183,8 @@ pub async fn get_tickets(
     offset: Option<i64>,
     filter_reporter_id: Option<i64>,
     filter_open: Option<bool>,
+    sort_by: Option<String>,
+    order_by: Option<String>,
 ) -> QueryResult<Vec<TicketWithoutDescription>> {
     use crate::schema::tickets;
 
@@ -207,6 +213,18 @@ pub async fn get_tickets(
                     .filter(tickets::status.eq("Done"))
                     .or_filter(tickets::status.eq("Closed"));
             }
+        }
+
+        if let Some(sort_by) = sort_by {
+            let order_by = order_by.unwrap_or_else(|| "asc".to_string());
+            query = match sort_by.as_str() {
+                "id" => sort_by_column(query, tickets::id, order_by),
+                "subject" => sort_by_column(query, tickets::subject, order_by),
+                "priority" => sort_by_column(query, tickets::priority, order_by),
+                "status" => sort_by_column(query, tickets::status, order_by),
+                "created" => sort_by_column(query, tickets::created, order_by),
+                _ => query,
+            };
         }
 
         query.load(c)
@@ -247,4 +265,19 @@ pub async fn update_ticket_by_id(
             .execute(c)
     })
     .await
+}
+
+fn sort_by_column<U: 'static>(
+    query: BoxedQuery<'static, Pg>,
+    column: U,
+    order_by: String,
+) -> BoxedQuery<'static, Pg>
+where
+    U: ExpressionMethods + QueryFragment<Pg> + AppearsOnTable<crate::schema::tickets::table>,
+{
+    match order_by.as_str() {
+        "asc" => query.order_by(column.asc()),
+        "desc" => query.order_by(column.desc()),
+        _ => query.order_by(column.asc()),
+    }
 }

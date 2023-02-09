@@ -329,15 +329,18 @@ pub async fn get_ticket_by_id_endpoint(
 /// offset: The offset for the list of tickets (optional, default is 0)
 /// reporter: Used to filter tickets that were reported by a certain user. Takes a number value. (optional)
 /// open: Used to filter tickets that are open or not. Takes a boolean. (optional)
-#[get("/tickets?<limit>&<offset>&<reporter>&<open>")]
+#[get("/tickets?<limit>&<offset>&<reporter>&<open>&<sort_by>&<order_by>")]
 pub async fn get_tickets_endpoint(
     conn: TiraDbConn,
     limit: Option<i64>,
     offset: Option<i64>,
     reporter: Option<i64>,
     open: Option<bool>,
+    sort_by: Option<String>,
+    order_by: Option<String>,
 ) -> TiraResponse<CountResponse<TicketWithoutDescriptionResponse>> {
-    let (tickets, total_count) = tickets::get_tickets(&conn, limit, offset, reporter, open).await?;
+    let (tickets, total_count) =
+        tickets::get_tickets(&conn, limit, offset, reporter, open, sort_by, order_by).await?;
     let mut tickets_response = Vec::new();
 
     for ticket in tickets {
