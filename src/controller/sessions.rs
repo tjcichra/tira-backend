@@ -42,9 +42,8 @@ pub async fn login_endpoint(
         Some(expiration)
     };
 
-    let cookie = Cookie::build(TIRA_AUTH_COOKIE, uuid_and_user.0)
-        .expires(expiration)
-        .finish();
+    let cookie = Cookie::build((TIRA_AUTH_COOKIE, uuid_and_user.0));
+    // .expires(expiration)
     cookies.add(cookie);
 
     Ok(controller::create_success_response(

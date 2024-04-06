@@ -1,6 +1,5 @@
 use crate::service::emails::handle_emails;
 use crate::service::emails::Email;
-use diesel::PgConnection;
 use dotenv::dotenv;
 use rocket::{
     fairing::{Fairing, Info, Kind},
@@ -31,7 +30,7 @@ pub struct TiraState {
 }
 
 #[database("tira_db")]
-pub struct TiraDbConn(PgConnection);
+pub struct TiraDbConn(rocket_sync_db_pools::postgres::Client);
 
 pub struct CORS;
 

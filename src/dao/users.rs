@@ -91,8 +91,6 @@ pub async fn get_user_by_username_and_password(
 
 /// DAO function for retrieving all users.
 pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> QueryResult<Vec<User>> {
-    use crate::schema::users;
-
     match filter_archived {
         Some(filter_archived) => {
             conn.run(move |c| {
@@ -101,6 +99,13 @@ pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> Quer
                     .load::<User>(c)
             })
             .await
+            
+            conn.run(move |c| {
+                c.execute(
+                    "SELECT  users SET username = $1, password = $2, email_address = $3, first_name = $4, last_name = $5, profile_picture_url = $6, archived = $7 WHERE id = $8",
+                    &[&user.username, &user.password, &user.email_address, &user.first_name, &user.last_name, &user.profile_picture_url, &user.archived, &user_id]
+                );
+            }).await
         }
         None => conn.run(|c| users::table.load(c)).await,
     }
@@ -112,12 +117,10 @@ pub async fn update_user_by_id(
     user: UpdateUser,
     user_id: i64,
 ) -> QueryResult<usize> {
-    use crate::schema::users;
-
     conn.run(move |c| {
-        diesel::update(users::table.filter(users::id.eq(user_id)))
-            .set(user)
-            .execute(c)
-    })
-    .await
+        c.execute(
+            "UPDATE users SET username = $1, password = $2, email_address = $3, first_name = $4, last_name = $5, profile_picture_url = $6, archived = $7 WHERE id = $8",
+            &[&user.username, &user.password, &user.email_address, &user.first_name, &user.last_name, &user.profile_picture_url, &user.archived, &user_id]
+        );
+    }).await
 }

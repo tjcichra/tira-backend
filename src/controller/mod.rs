@@ -9,8 +9,8 @@ pub mod users;
 use chrono::Utc;
 use diesel::{result::Error as QueryError, ExpressionMethods, QueryDsl, RunQueryDsl};
 use rocket::http::{CookieJar, Status};
+use rocket::response::status;
 use rocket::response::status::Custom;
-use rocket::response::{content, status};
 use rocket::{
     http::ContentType,
     serde::{json::Json, Serialize},
@@ -68,11 +68,12 @@ pub fn create_success_response_ok<T>(response_data: T) -> TiraSuccessResponse<T>
 }
 
 #[catch(404)]
-pub fn not_found(req: &Request) -> content::Custom<Json<TiraMessage>> {
-    let custom = ContentType::new("application", "problem+json");
+pub fn not_found(req: &Request) -> Custom<Json<TiraMessage>> {
+    // let custom = ContentType::new("application", "problem+json");
 
-    content::Custom(
-        custom,
+    Custom(
+        // custom,
+        Status::NotFound,
         Json(TiraMessage {
             message: format!("Sorry, '{}' is not a valid path.", req.uri()),
         }),
