@@ -65,35 +65,33 @@ jobs:
         id: cache-target
         uses: actions/cache@v4
         with:
-          path: api/target
+          path: target
           key: ${{ runner.os }}-target
       - name: Install sqlx-cli
         run: command -v sqlx >/dev/null 2>&1 || cargo install sqlx-cli
       - name: Run cockroach in the background for sqlx
         run: docker-compose run -d cockroach-ci
       - name: Create the database
-        run: sleep 10 && cd api && sqlx database create
+        run: sleep 10 && sqlx database create
       - name: Run migrations
-        run: cd api && sqlx migrate run
+        run: sqlx migrate run
       - name: Run prepare for build steps
-        run: cd api && cargo sqlx prepare && rm .env
+        run: cargo sqlx prepare && rm .env
       - name: Build for aarch64
         uses: jrcichra/cargo-action@main
         with:
           use-cross: true
           command: build
           args: --target aarch64-unknown-linux-musl --release
-          directory: api
       - name: Build for x86_64
         uses: jrcichra/cargo-action@main
         with:
           use-cross: true
           command: build
           args: --target x86_64-unknown-linux-musl --release
-          directory: api
       - uses: docker/build-push-action@v5
         with:
-          context: ./api
+          context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
