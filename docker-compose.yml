@@ -1,4 +1,9 @@
 services:
+  cockroach-ci:
+    image: cockroachdb/cockroach:v23.2.4
+    command: start-single-node --insecure
+    restart: unless-stopped
+    network_mode: host
   cockroach:
     image: cockroachdb/cockroach:v23.2.4
     command: start-single-node --insecure
