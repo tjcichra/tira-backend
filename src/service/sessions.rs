@@ -1,11 +1,10 @@
-use uuid::Uuid;
-
 use crate::{
-    controller::{self, TiraErrorResponse},
     dao,
     models::{Login, User},
-    service, TiraDbConn,
+    service, TiraState,
 };
+use anyhow::Result;
+use uuid::Uuid;
 
 /// Service function for retrieving user_id by session_uuid.
 // pub async fn get_user_id_from_session_uuid(conn: &TiraDbConn, session_uuid: String) -> QueryResult<i64> {
@@ -16,37 +15,25 @@ use crate::{
 /// Service function for performing a login.
 ///
 /// Returns the UUID for the newly created session and user.
-pub async fn login(
-    conn: &TiraDbConn,
-    login_info: Login,
-) -> Result<(String, User), TiraErrorResponse> {
+pub async fn login(state: &TiraState, login_info: Login) -> Result<(String, User)> {
     let remember_me = login_info.remember_me;
-    let user = dao::users::get_user_by_username_and_password(conn, login_info)
-        .await
-        .map_err(controller::convert)?;
+    let user = dao::users::get_user_by_username_and_password(state, login_info).await?;
 
     let my_uuid = Uuid::new_v4();
     dao::sessions::create_session_by_session_uuid_and_user_id(
-        conn,
+        state,
         my_uuid.to_string(),
         user.id,
         remember_me,
     )
-    .await
-    .map_err(controller::convert)?;
+    .await?;
 
     Ok((my_uuid.to_string(), user))
 }
 
 /// Service function for having a user log out.
-pub async fn logout(
-    conn: &TiraDbConn,
-    user_id: i64,
-    session_uuid: String,
-) -> Result<(), TiraErrorResponse> {
+pub async fn logout(state: &TiraState, user_id: i64, session_uuid: String) -> Result<()> {
     let sessions_deleted =
-        dao::sessions::delete_sessions_by_user_id_and_uuid(conn, user_id, session_uuid)
-            .await
-            .map_err(controller::convert)?;
+        dao::sessions::delete_sessions_by_user_id_and_uuid(state, user_id, session_uuid).await?;
     service::check_only_one_row_changed(sessions_deleted)
 }

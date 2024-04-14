@@ -1,18 +1,12 @@
-use crate::{
-    controller::{self, TiraErrorResponse},
-    dao,
-    models::patch::UpdateComment,
-    service, TiraDbConn,
-};
+use crate::{dao, models::patch::UpdateComment, service, TiraState};
+use anyhow::Result;
 
 /// Service function for updating a comment by id.
 pub async fn update_comment_by_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     comment: UpdateComment,
     comment_id: i64,
-) -> Result<(), TiraErrorResponse> {
-    let comments_updated = dao::comments::update_comment_by_id(conn, comment, comment_id)
-        .await
-        .map_err(controller::convert)?;
+) -> Result<()> {
+    let comments_updated = dao::comments::update_comment_by_id(state, comment, comment_id).await?;
     service::check_only_one_row_changed(comments_updated)
 }

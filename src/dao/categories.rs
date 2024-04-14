@@ -1,73 +1,66 @@
 use crate::{
-    models::{create::CreateCategory, Category},
-    TiraDbConn,
+    models::{Category, ReturningId},
+    TiraState,
 };
-use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use anyhow::{Context, Result};
 
 /// DAO function for archiving category by id.
-pub async fn archive_category_by_id(conn: &TiraDbConn, category_id: i64) -> QueryResult<usize> {
-    use crate::schema::categories;
-
-    conn.run(move |c| {
-        diesel::update(categories::table.filter(categories::id.eq(category_id)))
-            .set(categories::archived.eq(true))
-            .execute(c)
-    })
-    .await
+pub async fn archive_category_by_id(state: &TiraState, category_id: i64) -> Result<u64> {
+    let result = sqlx::query("UPDATE categories SET archived = true WHERE id = $1")
+        .bind(&category_id)
+        .execute(&state.pool)
+        .await?;
+    Ok(result.rows_affected())
 }
 
 /// DAO function for creating a category.
 ///
 /// Returns the id of the new category.
 pub async fn create_category(
-    conn: &TiraDbConn,
-    category: CreateCategory,
-    creator_id_parameter: i64,
-) -> QueryResult<i64> {
-    use crate::schema::categories;
+    state: &TiraState,
+    category: Category,
+    creator_id: i64,
+) -> Result<i64> {
+    let result = sqlx::query!(
+        "INSERT INTO categories (name, description, creator_id) VALUES ($1, $2, $3) RETURNING id",
+        category.name,
+        category.description,
+        creator_id
+    )
+    .fetch_all(&state.pool)
+    .await?;
 
-    conn.run(move |c| {
-        diesel::insert_into(categories::table)
-            .values((
-                category,
-                categories::creator_id.eq(creator_id_parameter),
-                categories::created.eq(Utc::now().naive_utc()),
-            ))
-            .returning(categories::id)
-            .get_result(c)
-    })
-    .await
+    let id = result
+        .first()
+        .context("could not get id when creating category")?
+        .id;
+
+    Ok(id)
 }
 
 /// DAO function for retrieving all categories.
 pub async fn get_categories(
-    conn: &TiraDbConn,
+    state: &TiraState,
     filter_archived: Option<bool>,
-) -> QueryResult<Vec<Category>> {
-    use crate::schema::categories;
-
-    match filter_archived {
-        Some(filter_archived) => {
-            conn.run(move |c| {
-                categories::table
-                    .filter(categories::archived.eq(filter_archived))
-                    .load(c)
-            })
-            .await
-        }
-        None => conn.run(|c| categories::table.load(c)).await,
-    }
+) -> Result<Vec<Category>> {
+    let categories = sqlx::query_as!(
+        Category,
+        "SELECT * FROM categories WHERE archived = $1",
+        filter_archived.unwrap_or(false)
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(categories)
 }
 
 /// DAO function for retrieving a category by user id.
-pub async fn get_category_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<Category> {
-    use crate::schema::categories;
-
-    conn.run(move |c| {
-        categories::table
-            .filter(categories::id.eq(user_id))
-            .first(c)
-    })
-    .await
+pub async fn get_category_by_id(state: &TiraState, user_id: i64) -> Result<Category> {
+    let categories = sqlx::query_as!(
+        Category,
+        "SELECT *  FROM categories WHERE creator_id = $1",
+        user_id
+    )
+    .fetch_one(&state.pool)
+    .await?;
+    Ok(categories)
 }

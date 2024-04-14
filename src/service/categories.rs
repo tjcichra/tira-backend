@@ -1,48 +1,37 @@
 use crate::{
-    controller::{self, TiraErrorResponse},
     dao::{self, categories},
-    models::{create::CreateCategory, Category},
-    service, TiraDbConn,
+    models::Category,
+    service, TiraState,
 };
+use anyhow::Result;
 
 /// Service function for archiving category by id.
-pub async fn archive_category_by_id(
-    conn: &TiraDbConn,
-    category_id: i64,
-) -> Result<(), TiraErrorResponse> {
-    let categories_archived = categories::archive_category_by_id(conn, category_id)
-        .await
-        .map_err(controller::convert)?;
+pub async fn archive_category_by_id(state: &TiraState, category_id: i64) -> Result<()> {
+    let categories_archived = categories::archive_category_by_id(state, category_id).await?;
     service::check_only_one_row_changed(categories_archived)
 }
 
 /// Service function for creating a category.
 pub async fn create_category(
-    conn: &TiraDbConn,
-    category: CreateCategory,
+    state: &TiraState,
+    category: Category,
     creator_id: i64,
-) -> Result<i64, TiraErrorResponse> {
-    dao::categories::create_category(conn, category, creator_id)
-        .await
-        .map_err(controller::convert)
+) -> Result<i64> {
+    let category = dao::categories::create_category(state, category, creator_id).await?;
+    Ok(category)
 }
 
 /// Service function for retrieving all categories.
 pub async fn get_categories(
-    conn: &TiraDbConn,
+    state: &TiraState,
     filter_archived: Option<bool>,
-) -> Result<Vec<Category>, TiraErrorResponse> {
-    dao::categories::get_categories(conn, filter_archived)
-        .await
-        .map_err(controller::convert)
+) -> Result<Vec<Category>> {
+    let categories = dao::categories::get_categories(state, filter_archived).await?;
+    Ok(categories)
 }
 
 /// Service function for retrieving a category by user id.
-pub async fn get_category_by_id(
-    conn: &TiraDbConn,
-    user_id: i64,
-) -> Result<Category, TiraErrorResponse> {
-    dao::categories::get_category_by_id(conn, user_id)
-        .await
-        .map_err(controller::convert)
+pub async fn get_category_by_id(state: &TiraState, user_id: i64) -> Result<Category> {
+    let category = dao::categories::get_category_by_id(state, user_id).await?;
+    Ok(category)
 }

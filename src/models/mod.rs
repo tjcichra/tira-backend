@@ -1,65 +1,11 @@
 use chrono::NaiveDateTime;
-
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
 pub mod patch;
 pub mod success;
 
-pub mod create {
-    use crate::schema::assignments;
-    use crate::schema::categories;
-    use crate::schema::comments;
-    use crate::schema::users;
-    use rocket::serde::Deserialize;
-
-    #[derive(Deserialize, Insertable)]
-    #[table_name = "assignments"]
-    #[serde(crate = "rocket::serde")]
-    pub struct CreateAssignmentWithUserId {
-        pub assignee_id: i64,
-    }
-
-    #[derive(Deserialize, Insertable)]
-    #[table_name = "categories"]
-    #[serde(crate = "rocket::serde")]
-    pub struct CreateCategory {
-        pub name: String,
-        pub description: Option<String>,
-    }
-
-    #[derive(Deserialize, Insertable)]
-    #[table_name = "comments"]
-    #[serde(crate = "rocket::serde")]
-    pub struct CreateComment {
-        pub content: String,
-    }
-
-    #[derive(Clone, Deserialize)]
-    #[serde(crate = "rocket::serde")]
-    pub struct CreateTicket {
-        pub category_id: Option<i64>,
-        pub subject: String,
-        pub description: Option<String>,
-        pub status: String,
-        pub priority: String,
-        pub assignee_ids: Vec<i64>,
-    }
-
-    #[derive(Deserialize, Insertable)]
-    #[table_name = "users"]
-    #[serde(crate = "rocket::serde")]
-    pub struct CreateUser {
-        pub username: String,
-        pub password: String,
-        pub email_address: Option<String>,
-        pub first_name: Option<String>,
-        pub last_name: Option<String>,
-        pub profile_picture_url: Option<String>,
-    }
-}
-
-#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
 pub struct User {
     pub id: i64,
     pub username: String,
@@ -73,8 +19,7 @@ pub struct User {
     pub archived: bool,
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Category {
     pub id: i64,
     pub name: String,
@@ -84,8 +29,21 @@ pub struct Category {
     pub archived: bool,
 }
 
-#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct CreateComment {
+    pub content: String,
+}
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct CreateTicket {
+    pub category_id: Option<i64>,
+    pub subject: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub priority: String,
+    pub assignee_ids: Vec<i64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Ticket {
     pub id: i64,
     pub subject: String,
@@ -97,8 +55,12 @@ pub struct Ticket {
     pub reporter_id: i64,
 }
 
-#[derive(Queryable, Clone, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct CreateAssignmentWithUserId {
+    pub assignee_id: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct TicketWithReporterAsUser {
     pub id: i64,
     pub subject: String,
@@ -110,8 +72,7 @@ pub struct TicketWithReporterAsUser {
     pub reporter: User,
 }
 
-#[derive(Queryable, Serialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct TicketWithoutDescription {
     pub id: i64,
     pub subject: String,
@@ -124,8 +85,7 @@ pub struct TicketWithoutDescription {
     pub reporter_id: i64,
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Assignment {
     pub id: i64,
     pub ticket_id: i64,
@@ -134,8 +94,7 @@ pub struct Assignment {
     pub assigned: NaiveDateTime,
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Comment {
     pub id: i64,
     pub ticket_id: i64,
@@ -144,8 +103,7 @@ pub struct Comment {
     pub commented: NaiveDateTime,
 }
 
-#[derive(Queryable, Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
 pub struct Session {
     pub uuid: String,
     pub user_id: i64,
@@ -153,10 +111,19 @@ pub struct Session {
     pub expiration: Option<NaiveDateTime>,
 }
 
-#[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Login {
     pub username: String,
     pub password: String,
     pub remember_me: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct Count {
+    pub cnt: Option<i64>,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ReturningId {
+    pub id: i64,
 }

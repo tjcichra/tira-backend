@@ -1,21 +1,15 @@
-use diesel::{QueryDsl, QueryResult};
-
-use crate::diesel::ExpressionMethods;
-use crate::diesel::RunQueryDsl;
-use crate::{models::patch::UpdateComment, TiraDbConn};
+use crate::{models::patch::UpdateComment, TiraState};
 
 /// DAO function for updating a comment by id.
 pub async fn update_comment_by_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     comment: UpdateComment,
     comment_id: i64,
-) -> QueryResult<usize> {
-    use crate::schema::comments;
-
-    conn.run(move |c| {
-        diesel::update(comments::table.filter(comments::id.eq(comment_id)))
-            .set(comment)
-            .execute(c)
-    })
-    .await
+) -> anyhow::Result<u64> {
+    let result = sqlx::query("UPDATE comments SET comment = $1 WHERE id = $2")
+        .bind(comment.content)
+        .bind(comment_id)
+        .execute(&state.pool)
+        .await?;
+    Ok(result.rows_affected())
 }

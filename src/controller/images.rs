@@ -1,35 +1,26 @@
+use super::TiraError;
 use crate::service;
-use rocket::data::Data;
-use rocket::data::ToByteUnit;
-use rocket::response::stream::ByteStream;
+use anyhow::Result;
+use axum::{
+    extract::{Multipart, Path},
+    response::{IntoResponse, Response},
+};
 
-//TODO: Remove 512KB limit
-#[post("/images/<file_name>", data = "<data>")]
+// Allow bigger than 2MB: https://docs.rs/axum/latest/axum/extract/struct.Multipart.html#large-files
 pub async fn upload_image_endpoint(
-    // conn: TiraDbConn,
-    // cookies: &CookieJar<'_>,
-    // upload_image_json: Json<UploadImage>,
-    // file_name: String,
-    file_name: &str,
-    data: Data<'_>,
-) -> std::io::Result<()> {
-    let tim = data.open(8.megabytes()).into_bytes().await?;
-    // .stream_to(tokio::io::stdout())
+    Path(file_name): Path<String>,
+    mut multipart: Multipart,
+) -> Result<Response, TiraError> {
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        // let name = field.name().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
 
-    if !tim.is_complete() {
-        println!("there are bytes remaining in the stream");
+        service::images::upload_image(&file_name, data.to_vec()).await;
     }
-
-    let j = tim.into_inner();
-    // controller::authentication(&conn, cookies).await.unwrap();
-    service::images::upload_image(file_name, j).await;
-    Ok(())
+    Ok("ok".into_response())
 }
 
-#[get("/images/<file_name>")]
-pub async fn retrieve_image_endpoint(file_name: &str) -> ByteStream![Vec<u8>] {
-    let tim = service::images::load_image(file_name).await;
-    ByteStream! {
-        yield tim;
-    }
+pub async fn retrieve_image_endpoint(Path(file_name): Path<String>) -> Result<Response, TiraError> {
+    let data = service::images::load_image(&file_name).await;
+    Ok(data.into_response())
 }

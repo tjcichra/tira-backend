@@ -1,123 +1,126 @@
 use crate::{
-    models::{create::CreateUser, patch::UpdateUser, Assignment, Login, User},
-    TiraDbConn,
+    models::{patch::UpdateUser, Assignment, Login, ReturningId, User},
+    TiraState,
 };
-use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use anyhow::Result;
+use sqlx::QueryBuilder;
 
 /// DAO function for archiving a user by id.
-pub async fn archive_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<usize> {
-    use crate::schema::users;
-
-    conn.run(move |c| {
-        diesel::update(users::table.filter(users::id.eq(user_id)))
-            .set(users::archived.eq(true))
-            .execute(c)
-    })
-    .await
+pub async fn archive_user_by_id(state: &TiraState, user_id: i64) -> Result<u64> {
+    let result = sqlx::query!("UPDATE users SET archived = true WHERE id = $1", user_id)
+        .execute(&state.pool)
+        .await?;
+    Ok(result.rows_affected())
 }
 
 /// DAO function for creating a user.
-pub async fn create_user(conn: &TiraDbConn, user: CreateUser) -> QueryResult<i64> {
-    use crate::schema::users;
-
-    conn.run(move |c| {
-        diesel::insert_into(users::table)
-            .values((&user, users::created.eq(Utc::now().naive_utc())))
-            .returning(users::id)
-            .get_result(c)
-    })
-    .await
+pub async fn create_user(state: &TiraState, user: User) -> Result<i64> {
+    let result =  sqlx::query!("INSERT INTO users (username, password, email_address, first_name, last_name, profile_picture_url) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
+    user.username,
+    user.password,
+    user.email_address,
+    user.first_name,
+    user.last_name,
+    user.profile_picture_url
+    )
+.fetch_one(&state.pool).await?;
+    Ok(result.id)
 }
 
 /// DAO function for retrieving all assignments for a user.
 pub async fn get_assignments_by_user_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     user_id: i64,
-) -> QueryResult<Vec<Assignment>> {
-    use crate::schema::assignments;
-
-    conn.run(move |c| {
-        assignments::table
-            .filter(assignments::assignee_id.eq(user_id))
-            .load::<Assignment>(c)
-    })
-    .await
+) -> Result<Vec<Assignment>> {
+    let assignments = sqlx::query_as!(
+        Assignment,
+        "SELECT * FROM assignments WHERE assignee_id = $1",
+        user_id
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(assignments)
 }
 
 /// DAO function for retrieving a user by id.
-pub async fn get_user_by_id(conn: &TiraDbConn, user_id: i64) -> QueryResult<User> {
-    use crate::schema::users;
-
-    conn.run(move |c| users::table.filter(users::id.eq(user_id)).first::<User>(c))
-        .await
+pub async fn get_user_by_id(state: &TiraState, user_id: i64) -> Result<User> {
+    let users = sqlx::query_as!(User, "SELECT * FROM users WHERE id = $1", user_id)
+        .fetch_one(&state.pool)
+        .await?;
+    Ok(users)
 }
 
 /// DAO function for retrieving users by ids.
-pub async fn get_users_by_ids(conn: &TiraDbConn, user_ids: Vec<i64>) -> QueryResult<Vec<User>> {
-    use crate::schema::users;
-
-    if user_ids.is_empty() {
-        return Ok(vec![]);
-    }
-
-    conn.run(move |c| {
-        let mut query = users::table.into_boxed();
-
-        for user_id in user_ids {
-            query = query.or_filter(users::id.eq(user_id));
-        }
-
-        query.load(c)
-    })
-    .await
+pub async fn get_users_by_ids(state: &TiraState, user_ids: Vec<i64>) -> Result<Vec<User>> {
+    let users = sqlx::query_as!(
+        User,
+        "SELECT * FROM users WHERE id IN (SELECT unnest($1::integer[]))",
+        &user_ids,
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(users)
 }
 
 /// DAO function for retrieving a user by username and password_hash.
-pub async fn get_user_by_username_and_password(
-    conn: &TiraDbConn,
-    login_info: Login,
-) -> QueryResult<User> {
-    use crate::schema::users;
-
-    conn.run(move |c| {
-        users::table
-            .filter(users::username.eq(login_info.username))
-            .filter(users::password.eq(login_info.password))
-            .first::<User>(c)
-    })
-    .await
+pub async fn get_user_by_username_and_password(state: &TiraState, login: Login) -> Result<User> {
+    let users = sqlx::query_as!(
+        User,
+        "SELECT * FROM users WHERE username = $1 and password = $2",
+        login.username,
+        login.password,
+    )
+    .fetch_one(&state.pool)
+    .await?;
+    Ok(users)
 }
 
 /// DAO function for retrieving all users.
-pub async fn get_users(conn: &TiraDbConn, filter_archived: Option<bool>) -> QueryResult<Vec<User>> {
-    use crate::schema::users;
-
-    match filter_archived {
-        Some(filter_archived) => {
-            conn.run(move |c| {
-                users::table
-                    .filter(users::archived.eq(filter_archived))
-                    .load::<User>(c)
-            })
-            .await
-        }
-        None => conn.run(|c| users::table.load(c)).await,
-    }
+pub async fn get_users(state: &TiraState, filter_archived: Option<bool>) -> Result<Vec<User>> {
+    let users = sqlx::query_as!(
+        User,
+        "SELECT * FROM users WHERE archived = $1",
+        filter_archived.unwrap_or(false)
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(users)
 }
 
 /// DAO function for updating a user by id.
-pub async fn update_user_by_id(
-    conn: &TiraDbConn,
-    user: UpdateUser,
-    user_id: i64,
-) -> QueryResult<usize> {
-    use crate::schema::users;
+pub async fn update_user_by_id(state: &TiraState, user: UpdateUser, user_id: i64) -> Result<u64> {
+    let mut query = QueryBuilder::new("UPDATE users SET ");
 
-    conn.run(move |c| {
-        diesel::update(users::table.filter(users::id.eq(user_id)))
-            .set(user)
-            .execute(c)
-    })
-    .await
+    if let Some(username) = user.username {
+        query.push("username = ");
+        query.push_bind(username);
+    }
+    if let Some(password) = user.password {
+        query.push("password = ");
+        query.push_bind(password);
+    }
+    if let Some(email_address) = user.email_address {
+        query.push("email_address = ");
+        query.push_bind(email_address);
+    }
+    if let Some(first_name) = user.first_name {
+        query.push("first_name = ");
+        query.push_bind(first_name);
+    }
+    if let Some(last_name) = user.last_name {
+        query.push("last_name = ");
+        query.push_bind(last_name);
+    }
+    if let Some(profile_picture_url) = user.profile_picture_url {
+        query.push("profile_picture_url = ");
+        query.push_bind(profile_picture_url);
+    }
+    if let Some(archived) = user.archived {
+        query.push("archived = ");
+        query.push_bind(archived);
+    }
+
+    let result = query.build().execute(&state.pool).await?;
+
+    Ok(result.rows_affected())
 }

@@ -1,15 +1,24 @@
 use std::env;
 
+use super::TiraError;
 use crate::{
-    controller::{self, TiraResponse, TIRA_AUTH_COOKIE},
-    models::{success::StandardResponse, Login, User},
-    service, TiraDbConn,
+    controller::TIRA_AUTH_COOKIE,
+    models::{success::StandardResponse, Login, Session},
+    service, TiraState,
 };
-use rocket::{
-    http::{Cookie, CookieJar, Status},
-    serde::json::Json,
+use anyhow::Result;
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Extension, Json,
 };
-use time::{Duration, OffsetDateTime};
+use axum_extra::extract::CookieJar;
+use cookie::{
+    time::{Duration, OffsetDateTime},
+    Cookie,
+};
+use log::info;
 
 /// Endpoint for login.
 ///
@@ -21,17 +30,16 @@ use time::{Duration, OffsetDateTime};
 ///     "username": "testusername",
 ///     "password": "testsha256password"
 /// }
-#[post("/login", data = "<login_info>")]
 pub async fn login_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>,
+    State(state): State<TiraState>,
+    cookie_jar: CookieJar,
     login_info: Json<Login>,
-) -> TiraResponse<User> {
+) -> Result<Response, TiraError> {
     let mut login_info = login_info.0;
     login_info.password = service::security::sha256(&login_info.password);
     let remember_me = login_info.remember_me;
 
-    let uuid_and_user = service::sessions::login(&conn, login_info).await?;
+    let uuid_and_user = service::sessions::login(&state, login_info).await?;
 
     let expiration = if remember_me {
         None
@@ -42,15 +50,9 @@ pub async fn login_endpoint(
         Some(expiration)
     };
 
-    let cookie = Cookie::build(TIRA_AUTH_COOKIE, uuid_and_user.0)
-        .expires(expiration)
-        .finish();
-    cookies.add(cookie);
+    let cookie = Cookie::build((TIRA_AUTH_COOKIE, uuid_and_user.0)).expires(expiration);
 
-    Ok(controller::create_success_response(
-        Status::Created,
-        uuid_and_user.1,
-    ))
+    Ok((cookie_jar.add(cookie), StatusCode::CREATED).into_response())
 }
 
 /// Endpoint for logging out.
@@ -58,17 +60,14 @@ pub async fn login_endpoint(
 /// **POST /logout**
 ///
 /// Requires authentication.
-#[post("/logout")]
 pub async fn logout_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>,
-) -> TiraResponse<StandardResponse> {
-    let (user_id, session_uuid) = controller::authentication(&conn, cookies).await?;
-
-    service::sessions::logout(&conn, user_id, session_uuid).await?;
-    cookies.remove(Cookie::named(TIRA_AUTH_COOKIE));
+    State(state): State<TiraState>,
+    Extension(session): Extension<Session>,
+    cookie_jar: CookieJar,
+) -> Result<Response, TiraError> {
+    service::sessions::logout(&state, session.user_id, session.uuid).await?;
 
     let message = "Successfully logged out user!".to_string();
     let response = StandardResponse { message };
-    Ok(controller::create_success_response_ok(response))
+    Ok((cookie_jar.remove(TIRA_AUTH_COOKIE), Json(response)).into_response())
 }

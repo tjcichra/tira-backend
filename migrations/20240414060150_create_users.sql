@@ -6,6 +6,6 @@ CREATE TABLE users (
     first_name TEXT,
     last_name TEXT,
     profile_picture_url TEXT,
-    created TIMESTAMP NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     archived BOOLEAN NOT NULL DEFAULT false
-)
+);

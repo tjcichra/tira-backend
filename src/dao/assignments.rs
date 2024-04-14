@@ -1,60 +1,48 @@
-use crate::{models::Assignment, TiraDbConn};
-use chrono::Utc;
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl};
+use crate::{models::Assignment, TiraState};
+use anyhow::Result;
+use sqlx::QueryBuilder;
 
 /// DAO function for retrieving all assignments.
 pub async fn get_assignments(
-    conn: &TiraDbConn,
+    state: &TiraState,
     assignee_id: Option<i64>,
     ticket_id: Option<i64>,
-) -> QueryResult<Vec<Assignment>> {
-    use crate::schema::assignments;
+) -> Result<Vec<Assignment>> {
+    let mut query = QueryBuilder::new(
+        "SELECT id, ticket_id, assignee_id, assigner_id, assigned from assignments where 1=1 ",
+    );
 
-    conn.run(move |c| {
-        let mut query = assignments::table.into_boxed();
+    if let Some(assignee_id) = assignee_id {
+        query.push("and assignee_id = ");
+        query.push_bind(assignee_id);
+    }
 
-        if let Some(assignee_id) = assignee_id {
-            query = query.filter(assignments::assignee_id.eq(assignee_id));
-        }
+    if let Some(ticket_id) = ticket_id {
+        query.push("and ticket_id = ");
+        query.push_bind(ticket_id);
+    }
 
-        if let Some(ticket_id) = ticket_id {
-            query = query.filter(assignments::ticket_id.eq(ticket_id));
-        }
+    let assignments = query
+        .build_query_as::<Assignment>()
+        .fetch_all(&state.pool)
+        .await?;
 
-        query.load(c)
-    })
-    .await
+    Ok(assignments)
 }
 
 /// DAO function for updating assignments by ticket id.
 pub async fn update_assignments_by_ticket_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     ticket_id: i64,
     assignee_ids: Vec<i64>,
     assigner_id: i64,
-) -> QueryResult<usize> {
-    use crate::schema::assignments;
+) -> Result<()> {
+    //  TODO: use transaction
+    for id in assignee_ids {
+        sqlx::query!(
+            "UPDATE assignments SET assignee_id = $1, assigner_id = $2 WHERE ticket_id = $3 RETURNING ticket_id",id, assigner_id, ticket_id
+        ).fetch_all(&state.pool).await?;
+    }
 
-    conn.run(move |c| {
-        diesel::delete(assignments::table)
-            .filter(assignments::ticket_id.eq(ticket_id))
-            .execute(c)?;
-
-        let assignments_parameter: Vec<_> = assignee_ids
-            .iter()
-            .map(|assignee_id| {
-                (
-                    assignments::ticket_id.eq(ticket_id),
-                    assignments::assignee_id.eq(assignee_id),
-                    assignments::assigner_id.eq(assigner_id),
-                    assignments::assigned.eq(Utc::now().naive_utc()),
-                )
-            })
-            .collect();
-
-        diesel::insert_into(assignments::table)
-            .values(&assignments_parameter)
-            .execute(c)
-    })
-    .await
+    Ok(())
 }
