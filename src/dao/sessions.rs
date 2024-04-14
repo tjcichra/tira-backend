@@ -31,7 +31,7 @@ pub async fn create_session_by_session_uuid_and_user_id(
         )
         .fetch_one(&state.pool)
         .await?;
-        return Ok(result.uuid);
+        Ok(result.uuid)
     } else {
         let session_length_minutes_env: i64 =
             env::var("SESSION_LENGTH_MINUTES").unwrap().parse().unwrap();
@@ -47,7 +47,7 @@ pub async fn create_session_by_session_uuid_and_user_id(
         .fetch_one(&state.pool)
         .await?;
 
-        return Ok(result.uuid);
+        Ok(result.uuid)
     }
 }
 

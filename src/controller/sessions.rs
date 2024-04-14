@@ -18,7 +18,6 @@ use cookie::{
     time::{Duration, OffsetDateTime},
     Cookie,
 };
-use log::info;
 
 /// Endpoint for login.
 ///

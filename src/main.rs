@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
     });
 
     let state = TiraState {
-        email_tx: email_tx,
+        email_tx,
         pool: PgPoolOptions::new().connect(&args.database_url).await?,
     };
 

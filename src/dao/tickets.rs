@@ -1,6 +1,6 @@
 use crate::{
     models::{
-        patch::UpdateTicket, Assignment, Comment, Count, CreateTicket, ReturningId, Ticket,
+        patch::UpdateTicket, Assignment, Comment, Count, CreateTicket, Ticket,
         TicketWithoutDescription,
     },
     TiraState,
@@ -130,12 +130,12 @@ pub async fn get_tickets_by_ids(state: &TiraState, ticket_ids: Vec<i64>) -> Resu
 /// DAO function for retrieving all tickets.
 pub async fn get_tickets(
     state: &TiraState,
-    limit: Option<i64>,
-    offset: Option<i64>,
-    filter_reporter_id: Option<i64>,
-    filter_open: Option<bool>,
-    sort_by: Option<String>,
-    order_by: Option<String>,
+    // limit: Option<i64>,
+    // offset: Option<i64>,
+    // filter_reporter_id: Option<i64>,
+    // filter_open: Option<bool>,
+    // sort_by: Option<String>,
+    // order_by: Option<String>,
 ) -> Result<Vec<TicketWithoutDescription>> {
     // TODO use query builder - right now ignore all the filter options
 

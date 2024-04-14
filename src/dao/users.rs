@@ -1,5 +1,5 @@
 use crate::{
-    models::{patch::UpdateUser, Assignment, Login, ReturningId, User},
+    models::{patch::UpdateUser, Assignment, Login, User},
     TiraState,
 };
 use anyhow::Result;
@@ -119,6 +119,9 @@ pub async fn update_user_by_id(state: &TiraState, user: UpdateUser, user_id: i64
         query.push("archived = ");
         query.push_bind(archived);
     }
+
+    query.push("WHERE id = ");
+    query.push_bind(user_id);
 
     let result = query.build().execute(&state.pool).await?;
 

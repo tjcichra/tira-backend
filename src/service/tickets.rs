@@ -33,7 +33,7 @@ pub async fn create_comment_by_ticket_id_and_commenter_id(
     commenter_id: i64,
 ) -> Result<i64> {
     let regex = Regex::new(r"(</?[^>]+(>|$)|&nbsp;|\s)").unwrap();
-    let content_without_tags: String = regex.replace_all(&comment, "").into();
+    let content_without_tags: String = regex.replace_all(comment, "").into();
 
     if content_without_tags.is_empty() {
         return Err(anyhow!("Comment cannot be blank!"));
@@ -108,21 +108,21 @@ pub async fn get_tickets_by_ids(state: &TiraState, ticket_ids: Vec<i64>) -> Resu
 /// Service function for retrieving all tickets.
 pub async fn get_tickets(
     state: &TiraState,
-    limit: Option<i64>,
-    offset: Option<i64>,
-    filter_reporter_id: Option<i64>,
-    filter_open: Option<bool>,
-    sort_by: Option<String>,
-    order_by: Option<String>,
+    // limit: Option<i64>,
+    // offset: Option<i64>,
+    // filter_reporter_id: Option<i64>,
+    // filter_open: Option<bool>,
+    // sort_by: Option<String>,
+    // order_by: Option<String>,
 ) -> Result<(Vec<TicketWithoutDescription>, i64)> {
     let tickets = dao::tickets::get_tickets(
         state,
-        limit,
-        offset,
-        filter_reporter_id,
-        filter_open,
-        sort_by,
-        order_by,
+        // limit,
+        // offset,
+        // filter_reporter_id,
+        // filter_open,
+        // sort_by,
+        // order_by,
     )
     .await?;
 

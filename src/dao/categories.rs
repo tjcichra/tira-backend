@@ -1,13 +1,10 @@
-use crate::{
-    models::{Category, ReturningId},
-    TiraState,
-};
+use crate::{models::Category, TiraState};
 use anyhow::{Context, Result};
 
 /// DAO function for archiving category by id.
 pub async fn archive_category_by_id(state: &TiraState, category_id: i64) -> Result<u64> {
     let result = sqlx::query("UPDATE categories SET archived = true WHERE id = $1")
-        .bind(&category_id)
+        .bind(category_id)
         .execute(&state.pool)
         .await?;
     Ok(result.rows_affected())

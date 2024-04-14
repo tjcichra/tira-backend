@@ -4,11 +4,11 @@ use crate::models::success::{
     AlteredResourceResponse, CommentResponse, CountResponse, TicketResponse,
     TicketWithoutDescriptionResponse,
 };
-use crate::models::{CreateAssignmentWithUserId, CreateComment, CreateTicket, Session, Ticket};
+use crate::models::{CreateAssignmentWithUserId, CreateComment, CreateTicket, Session};
 use crate::service::{self, tickets};
 use crate::TiraState;
 use anyhow::Result;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use serde::Deserialize;
@@ -267,12 +267,12 @@ pub async fn get_ticket_by_id_endpoint(
 
 #[derive(Deserialize)]
 pub struct GetTicketsQueryParams {
-    limit: Option<i64>,
-    offset: Option<i64>,
-    reporter: Option<i64>,
-    open: Option<bool>,
-    sort_by: Option<String>,
-    order_by: Option<String>,
+    // limit: Option<i64>,
+    // offset: Option<i64>,
+    // reporter: Option<i64>,
+    // open: Option<bool>,
+    // sort_by: Option<String>,
+    // order_by: Option<String>,
 }
 
 /// Endpoint for retrieving every ticket.
@@ -287,16 +287,16 @@ pub struct GetTicketsQueryParams {
 /// open: Used to filter tickets that are open or not. Takes a boolean. (optional)
 pub async fn get_tickets_endpoint(
     State(state): State<TiraState>,
-    Query(query): Query<GetTicketsQueryParams>,
+    // Query(query): Query<GetTicketsQueryParams>,
 ) -> Result<Response, TiraError> {
     let (tickets, total_count) = tickets::get_tickets(
         &state,
-        query.limit,
-        query.offset,
-        query.reporter,
-        query.open,
-        query.sort_by,
-        query.order_by,
+        // query.limit,
+        // query.offset,
+        // query.reporter,
+        // query.open,
+        // query.sort_by,
+        // query.order_by,
     )
     .await?;
     let mut tickets_response = Vec::new();
