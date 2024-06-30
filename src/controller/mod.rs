@@ -42,6 +42,10 @@ where
     }
 }
 
+pub async fn health() -> Result<Response, TiraError> {
+    Ok("ok".into_response())
+}
+
 // Service method that checks for authentication given a user's cookies
 //
 // Returns the user id of that user and their session uuid if they are authenticated or returns an error response

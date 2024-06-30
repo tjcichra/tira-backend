@@ -77,6 +77,7 @@ async fn main() -> Result<()> {
     info!("setting up public routes");
     let no_auth_routes = Router::new()
         .route("/login", post(controller::sessions::login_endpoint))
+        .route("/health", get(controller::health))
         .layer(cors.clone())
         .with_state(state.clone());
 
