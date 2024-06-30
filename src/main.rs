@@ -11,6 +11,7 @@ use clap::Parser;
 use dotenv::dotenv;
 use log::info;
 use std::sync::mpsc;
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::task;
 use tower_http::cors::Any;
@@ -55,7 +56,10 @@ async fn main() -> Result<()> {
 
     let state = TiraState {
         email_tx,
-        pool: PgPoolOptions::new().connect(&args.database_url).await?,
+        pool: PgPoolOptions::new()
+            .acquire_timeout(Duration::from_secs(5))
+            .connect(&args.database_url)
+            .await?,
     };
 
     let cors = CorsLayer::new()
