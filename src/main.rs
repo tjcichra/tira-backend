@@ -62,9 +62,10 @@ async fn main() -> Result<()> {
     });
 
     info!("connecting to the database");
+    let pool = PgPoolOptions::new().connect(&args.database_url).await?;
     let state = TiraState {
         email_tx,
-        pool: PgPoolOptions::new().connect(&args.database_url).await?,
+        pool: pool.clone(),
     };
     info!("successfully to the database");
 
