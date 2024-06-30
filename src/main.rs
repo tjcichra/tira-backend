@@ -11,6 +11,7 @@ use clap::Parser;
 use dotenv::dotenv;
 use log::info;
 use std::sync::mpsc;
+use std::thread;
 use tokio::net::TcpListener;
 use tokio::task;
 use tower_http::cors::Any;
@@ -57,15 +58,14 @@ async fn main() -> Result<()> {
     info!("setting up email handler");
     let (email_tx, email_rx) = mpsc::sync_channel(512);
     // Listen for emails on the email queue
-    task::spawn(async move {
+    thread::spawn(move || {
         handle_emails(email_rx);
     });
 
     info!("connecting to the database");
-    let pool = PgPoolOptions::new().connect(&args.database_url).await?;
     let state = TiraState {
         email_tx,
-        pool: pool.clone(),
+        pool: PgPoolOptions::new().connect(&args.database_url).await?,
     };
     info!("successfully to the database");
 
