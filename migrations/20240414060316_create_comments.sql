@@ -3,5 +3,5 @@ CREATE TABLE comments (
     ticket_id BIGINT REFERENCES tickets (id) NOT NULL,
     commenter_id BIGINT REFERENCES users (id) NOT NULL,
     content TEXT NOT NULL,
-    commented TIMESTAMP NOT NULL
+    commented TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

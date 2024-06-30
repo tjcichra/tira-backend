@@ -1,10 +1,6 @@
-use rocket::serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::schema::comments;
-use crate::schema::users;
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateTicket {
     pub category_id: Option<i64>,
     pub subject: Option<String>,
@@ -14,9 +10,7 @@ pub struct UpdateTicket {
     pub assignee_ids: Option<Vec<i64>>,
 }
 
-#[derive(AsChangeset, Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[table_name = "users"]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateUser {
     pub username: Option<String>,
     pub password: Option<String>,
@@ -27,9 +21,7 @@ pub struct UpdateUser {
     pub archived: Option<bool>,
 }
 
-#[derive(AsChangeset, Debug, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[table_name = "comments"]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateComment {
     pub content: String,
 }

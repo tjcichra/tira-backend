@@ -1,28 +1,38 @@
-use crate::controller::{self, TiraResponse};
+use super::TiraError;
 use crate::models::success::{AlteredResourceResponse, StandardResponse};
-use crate::models::{create::CreateCategory, Category};
+use crate::models::{Category, Session};
 use crate::service::categories;
-use crate::TiraDbConn;
-use rocket::http::{CookieJar, Status};
-use rocket::serde::json::Json;
+use crate::TiraState;
+use anyhow::Result;
+use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::{Extension, Json};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct ArchiveCategoryQueryParams {
+    category_id: i64,
+}
 
 /// Endpoint for archiving a specific category.
 ///
 /// Requires authentication.
 ///
 /// **DELETE /categories/<category_id>**
-#[delete("/categories/<category_id>")]
-pub async fn archive_category_by_id_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>,
-    category_id: i64,
-) -> TiraResponse<StandardResponse> {
-    controller::authentication(&conn, cookies).await?;
-    categories::archive_category_by_id(&conn, category_id).await?;
 
-    let message = format!("Successfully archived category with id {}!", category_id);
+pub async fn archive_category_by_id_endpoint(
+    State(state): State<TiraState>,
+    query_params: Query<ArchiveCategoryQueryParams>,
+) -> Result<Response, TiraError> {
+    categories::archive_category_by_id(&state, query_params.category_id).await?;
+
+    let message = format!(
+        "Successfully archived category with id {}!",
+        query_params.category_id
+    );
     let response = StandardResponse { message };
-    Ok(controller::create_success_response_ok(response))
+    Ok(Json(response).into_response())
 }
 
 /// Endpoint for creating a category.
@@ -37,24 +47,24 @@ pub async fn archive_category_by_id_endpoint(
 ///     "name": "testname",
 ///     "description": "testdescription"
 /// }
-#[post("/categories", data = "<create_category_json>")]
 pub async fn create_category_endpoint(
-    conn: TiraDbConn,
-    cookies: &CookieJar<'_>,
-    create_category_json: Json<CreateCategory>,
-) -> TiraResponse<AlteredResourceResponse> {
-    let (user_id, _session_uuid) = controller::authentication(&conn, cookies).await?;
-    let category_id = categories::create_category(&conn, create_category_json.0, user_id).await?;
+    State(state): State<TiraState>,
+    Extension(session): Extension<Session>,
+    Json(category): Json<Category>,
+) -> Result<Response, TiraError> {
+    let category_id = categories::create_category(&state, category, session.user_id).await?;
 
     let message = format!("Successfully created category with id {}", category_id);
     let response = AlteredResourceResponse {
         message,
         id: category_id,
     };
-    Ok(controller::create_success_response(
-        Status::Created,
-        response,
-    ))
+    Ok((StatusCode::CREATED, Json(response)).into_response())
+}
+
+#[derive(Deserialize)]
+pub struct GetCategoryQueryParams {
+    archived: Option<bool>,
 }
 
 /// Endpoint for retrieving every category.
@@ -64,23 +74,23 @@ pub async fn create_category_endpoint(
 /// Query Parameters:
 ///
 /// archived: Used to filter categories that are archived or not. Takes a boolean value. (optional)
-#[get("/categories?<archived>")]
+
 pub async fn get_categories_endpoint(
-    conn: TiraDbConn,
-    archived: Option<bool>,
-) -> TiraResponse<Vec<Category>> {
-    let categories = categories::get_categories(&conn, archived).await?;
-    Ok(controller::create_success_response_ok(categories))
+    State(state): State<TiraState>,
+    query_params: Query<GetCategoryQueryParams>,
+) -> Result<Response, TiraError> {
+    let categories = categories::get_categories(&state, query_params.archived).await?;
+    Ok(Json(categories).into_response())
 }
 
 /// Endpoint for retrieving a category.
 ///
 /// **GET /categories/<category_id>**
-#[get("/categories/<category_id>")]
+
 pub async fn get_category_by_id_endpoint(
-    conn: TiraDbConn,
-    category_id: i64,
-) -> TiraResponse<Category> {
-    let category = categories::get_category_by_id(&conn, category_id).await?;
-    Ok(controller::create_success_response_ok(category))
+    State(state): State<TiraState>,
+    Path(category_id): Path<i64>,
+) -> Result<Response, TiraError> {
+    let category = categories::get_category_by_id(&state, category_id).await?;
+    Ok(Json(category).into_response())
 }

@@ -1,30 +1,25 @@
+use super::TicketWithReporterAsUser;
 use crate::models::{Category, User};
 use chrono::NaiveDateTime;
-use rocket::serde::Serialize;
-
-use super::TicketWithReporterAsUser;
+use serde::Serialize;
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct StandardResponse {
     pub message: String,
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct AlteredResourceResponse {
     pub message: String,
     pub id: i64,
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct EditTicketResponse {
     pub id: i64,
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct CommentResponse {
     pub id: i64,
     pub commenter: User,
@@ -33,7 +28,6 @@ pub struct CommentResponse {
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct TicketResponse {
     pub id: i64,
     pub subject: String,
@@ -47,14 +41,12 @@ pub struct TicketResponse {
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct CountResponse<T> {
     pub data: Vec<T>,
     pub total_count: i64,
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct TicketWithoutDescriptionResponse {
     pub id: i64,
     pub subject: String,
@@ -67,7 +59,6 @@ pub struct TicketWithoutDescriptionResponse {
 }
 
 #[derive(Serialize)]
-#[serde(crate = "rocket::serde")]
 pub struct AssignmentResponse {
     pub id: i64,
     pub ticket: TicketWithReporterAsUser,

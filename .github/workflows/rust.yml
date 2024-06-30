@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Repo metadata
         id: repo
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             return context.repo.repo
@@ -47,19 +47,51 @@ jobs:
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Login to ghcr.io
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v3
+      - name: Cache Cargo binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: ${{ runner.os }}-cargo-bin
+      - name: Cache target directory
+        id: cache-target
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target
+      - name: Install sqlx-cli
+        run: command -v sqlx >/dev/null 2>&1 || cargo install sqlx-cli
+      - name: Run cockroach in the background for sqlx
+        run: docker-compose run -d cockroach-ci
+      - name: Create the database
+        run: sleep 10 && sqlx database create
+      - name: Run migrations
+        run: sqlx migrate run
+      - name: Run prepare for build steps
+        run: cargo sqlx prepare && rm .env
+      - name: Build for aarch64
+        uses: jrcichra/cargo-action@main
+        with:
+          use-cross: true
+          command: build
+          args: --target aarch64-unknown-linux-musl --release
+      - name: Build for x86_64
+        uses: jrcichra/cargo-action@main
+        with:
+          use-cross: true
+          command: build
+          args: --target x86_64-unknown-linux-musl --release
+      - uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}

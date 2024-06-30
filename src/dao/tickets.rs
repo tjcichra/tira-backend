@@ -1,283 +1,194 @@
 use crate::{
     models::{
-        create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-        patch::UpdateTicket,
-        Assignment, Comment, Ticket, TicketWithoutDescription,
+        patch::UpdateTicket, Assignment, Comment, Count, CreateTicket, Ticket,
+        TicketWithoutDescription,
     },
-    schema::tickets::BoxedQuery,
-    TiraDbConn,
+    TiraState,
 };
-use chrono::Utc;
-use diesel::{
-    pg::Pg, query_builder::QueryFragment, AppearsOnTable, ExpressionMethods, QueryDsl, QueryResult,
-    RunQueryDsl,
-};
+use anyhow::Result;
+use sqlx::QueryBuilder;
 
 /// DAO function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
-    conn: &TiraDbConn,
-    assignee_id_parameter: CreateAssignmentWithUserId,
-    ticket_id_parameter: i64,
-    assigner_id_parameter: i64,
-) -> QueryResult<i64> {
-    use crate::schema::assignments;
+    state: &TiraState,
+    assignee_id: i64,
+    ticket_id: i64,
+    assigner_id: i64,
+) -> Result<i64> {
+    let result =  sqlx::query!("INSERT INTO assignments (assignee_id, ticket_id, assigner_id, assigned) VALUES ($1, $2, $3, NOW()) RETURNING id",assignee_id,ticket_id, assigner_id)
+    .fetch_all(&state.pool).await?;
 
-    conn.run(move |c| {
-        diesel::insert_into(assignments::table)
-            .values((
-                assignments::assignee_id.eq(assignee_id_parameter.assignee_id),
-                assignments::ticket_id.eq(ticket_id_parameter),
-                assignments::assigner_id.eq(assigner_id_parameter),
-                assignments::assigned.eq(Utc::now().naive_utc()),
-            ))
-            .returning(assignments::id)
-            .get_result(c)
-    })
-    .await
+    let id = result.first().unwrap().id;
+
+    Ok(id)
 }
 
 /// DAO function for creating a comment by ticket id.
 pub async fn create_comment_by_ticket_id_and_commenter_id(
-    conn: &TiraDbConn,
-    comment: CreateComment,
-    ticket_id_parameter: i64,
-    commenter_id_parameter: i64,
-) -> QueryResult<i64> {
-    use crate::schema::comments;
+    state: &TiraState,
+    content: &str,
+    ticket_id: i64,
+    commenter_id: i64,
+) -> Result<i64> {
+    let result = sqlx::query!(
+        "INSERT INTO comments (ticket_id, commenter_id, content) VALUES ($1, $2, $3) RETURNING id",
+        ticket_id,
+        commenter_id,
+        content,
+    )
+    .fetch_one(&state.pool)
+    .await?;
 
-    conn.run(move |c| {
-        diesel::insert_into(comments::table)
-            .values((
-                &comment,
-                comments::ticket_id.eq(ticket_id_parameter),
-                comments::commenter_id.eq(commenter_id_parameter),
-                comments::commented.eq(Utc::now().naive_utc()),
-            ))
-            .returning(comments::id)
-            .get_result(c)
-    })
-    .await
+    Ok(result.id)
 }
 
 /// DAO function for creating a ticket by reporter id and assigning those tickets.
 ///
 /// Returns the id of the new ticket.
 pub async fn create_ticket_by_reporter_id(
-    conn: &TiraDbConn,
-    ticket: CreateTicket,
-    reporter_id_parameter: i64,
-) -> QueryResult<i64> {
-    conn.run(move |c| {
-        let ticket_id_parameter = {
-            use crate::schema::tickets;
+    state: &TiraState,
+    ticket: &CreateTicket,
+    reporter_id: i64,
+) -> Result<i64> {
+    // TODO: make a sql transaction
+    let result =  sqlx::query!(
+        "INSERT INTO tickets (category_id, subject, description, status, priority, reporter_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id", 
+        ticket.category_id,
+        ticket.subject.clone(),
+        ticket.description.clone(),
+        ticket.status.clone(),
+        ticket.priority.clone(),
+        reporter_id,
+    )
+     .fetch_one(&state.pool).await?;
 
-            diesel::insert_into(tickets::table)
-                .values((
-                    tickets::category_id.eq(ticket.category_id),
-                    tickets::subject.eq(ticket.subject),
-                    tickets::description.eq(ticket.description),
-                    tickets::status.eq(ticket.status),
-                    tickets::priority.eq(ticket.priority),
-                    tickets::created.eq(Utc::now().naive_utc()),
-                    tickets::reporter_id.eq(reporter_id_parameter),
-                ))
-                .returning(tickets::id)
-                .get_result(c)?
-        };
+    let ticket_id = result.id;
 
-        {
-            use crate::schema::assignments;
+    for assignee in &ticket.assignee_ids {
+        sqlx::query!(
+            "INSERT INTO assignments (ticket_id, assignee_id, assigner_id) VALUES ($1,$2,$3)",
+            ticket_id,
+            assignee,
+            reporter_id
+        )
+        .fetch_one(&state.pool)
+        .await?;
+    }
 
-            let assignments_parameter: Vec<_> = ticket
-                .assignee_ids
-                .iter()
-                .map(|assignee_id_parameter| {
-                    (
-                        assignments::ticket_id.eq(ticket_id_parameter),
-                        assignments::assignee_id.eq(assignee_id_parameter),
-                        assignments::assigner_id.eq(reporter_id_parameter),
-                        assignments::assigned.eq(Utc::now().naive_utc()),
-                    )
-                })
-                .collect();
+    // tx.commit().await?;
 
-            diesel::insert_into(assignments::table)
-                .values(&assignments_parameter)
-                .execute(c)?;
-        }
-
-        Ok(ticket_id_parameter)
-    })
-    .await
+    Ok(result.id)
 }
 
 /// DAO function for retrieving assignments by ticket id.
 pub async fn get_assignments_by_ticket_id(
-    conn: &TiraDbConn,
-    ticket_id_parameter: i64,
-) -> QueryResult<Vec<Assignment>> {
-    use crate::schema::assignments;
-
-    conn.run(move |c| {
-        assignments::table
-            .filter(assignments::ticket_id.eq(ticket_id_parameter))
-            .load::<Assignment>(c)
-    })
-    .await
+    state: &TiraState,
+    ticket_id: i64,
+) -> Result<Vec<Assignment>> {
+    let assignments = sqlx::query_as!(
+        Assignment,
+        "SELECT * FROM assignments WHERE ticket_id = $1",
+        ticket_id
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(assignments)
 }
 
 /// DAO function for retrieving comments by ticket id.
-pub async fn get_comments_by_ticket_id(
-    conn: &TiraDbConn,
-    ticket_id_parameter: i64,
-) -> QueryResult<Vec<Comment>> {
-    use crate::schema::comments;
-
-    conn.run(move |c| {
-        comments::table
-            .filter(comments::ticket_id.eq(ticket_id_parameter))
-            .load::<Comment>(c)
-    })
-    .await
+pub async fn get_comments_by_ticket_id(state: &TiraState, ticket_id: i64) -> Result<Vec<Comment>> {
+    let comments = sqlx::query_as!(
+        Comment,
+        "SELECT * FROM comments WHERE ticket_id = $1",
+        ticket_id
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(comments)
 }
 
 /// DAO function for retrieving a ticket by id.
-pub async fn get_ticket_by_id(conn: &TiraDbConn, ticket_id: i64) -> QueryResult<Ticket> {
-    use crate::schema::tickets;
-
-    conn.run(move |c| {
-        tickets::table
-            .filter(tickets::id.eq(ticket_id))
-            .first::<Ticket>(c)
-    })
-    .await
+pub async fn get_ticket_by_id(state: &TiraState, ticket_id: i64) -> Result<Ticket> {
+    let ticket = sqlx::query_as!(Ticket, "SELECT * FROM tickets WHERE id = $1", ticket_id)
+        .fetch_one(&state.pool)
+        .await?;
+    Ok(ticket)
 }
 
 /// DAO function for retrieving tickets by ids.
-pub async fn get_tickets_by_ids(
-    conn: &TiraDbConn,
-    ticket_ids: Vec<i64>,
-) -> QueryResult<Vec<Ticket>> {
-    use crate::schema::tickets;
-
-    if ticket_ids.is_empty() {
-        return Ok(vec![]);
-    }
-
-    conn.run(move |c| {
-        let mut query = tickets::table.into_boxed();
-
-        for ticket_id in ticket_ids {
-            query = query.or_filter(tickets::id.eq(ticket_id));
-        }
-
-        query.load(c)
-    })
-    .await
+pub async fn get_tickets_by_ids(state: &TiraState, ticket_ids: Vec<i64>) -> Result<Vec<Ticket>> {
+    let tickets = sqlx::query_as!(
+        Ticket,
+        "SELECT * FROM tickets WHERE id in (SELECT unnest($1::integer[]))",
+        &ticket_ids
+    )
+    .fetch_all(&state.pool)
+    .await?;
+    Ok(tickets)
 }
 
 /// DAO function for retrieving all tickets.
 pub async fn get_tickets(
-    conn: &TiraDbConn,
-    limit: Option<i64>,
-    offset: Option<i64>,
-    filter_reporter_id: Option<i64>,
-    filter_open: Option<bool>,
-    sort_by: Option<String>,
-    order_by: Option<String>,
-) -> QueryResult<Vec<TicketWithoutDescription>> {
-    use crate::schema::tickets;
+    state: &TiraState,
+    // limit: Option<i64>,
+    // offset: Option<i64>,
+    // filter_reporter_id: Option<i64>,
+    // filter_open: Option<bool>,
+    // sort_by: Option<String>,
+    // order_by: Option<String>,
+) -> Result<Vec<TicketWithoutDescription>> {
+    // TODO use query builder - right now ignore all the filter options
 
-    conn.run(move |c| {
-        let mut query = tickets::table.into_boxed();
-
-        if let Some(limit) = limit {
-            query = query.limit(limit);
-        }
-
-        if let Some(offset) = offset {
-            query = query.offset(offset);
-        }
-
-        if let Some(filter_reporter_id) = filter_reporter_id {
-            query = query.filter(tickets::reporter_id.eq(filter_reporter_id));
-        }
-
-        if let Some(filter_open) = filter_open {
-            if filter_open {
-                query = query
-                    .filter(tickets::status.ne("Done"))
-                    .filter(tickets::status.ne("Closed"));
-            } else {
-                query = query
-                    .filter(tickets::status.eq("Done"))
-                    .or_filter(tickets::status.eq("Closed"));
-            }
-        }
-
-        if let Some(sort_by) = sort_by {
-            let order_by = order_by.unwrap_or_else(|| "asc".to_string());
-            query = match sort_by.as_str() {
-                "id" => sort_by_column(query, tickets::id, order_by),
-                "subject" => sort_by_column(query, tickets::subject, order_by),
-                "priority" => sort_by_column(query, tickets::priority, order_by),
-                "status" => sort_by_column(query, tickets::status, order_by),
-                "created" => sort_by_column(query, tickets::created, order_by),
-                _ => query,
-            };
-        }
-
-        query.load(c)
-    })
-    .await
+    let tickets = sqlx::query_as!(TicketWithoutDescription, "SELECT * FROM tickets")
+        .fetch_all(&state.pool)
+        .await?;
+    Ok(tickets)
 }
 
 /// DAO function for retrieving the total ticket count.
-pub async fn get_total_ticket_count(conn: &TiraDbConn) -> QueryResult<i64> {
-    use crate::schema::tickets;
-
-    conn.run(|c| tickets::table.count().get_result(c)).await
+pub async fn get_total_ticket_count(state: &TiraState) -> Result<i64> {
+    let result = sqlx::query_as!(Count, "SELECT count(*) cnt FROM tickets")
+        .fetch_one(&state.pool)
+        .await?;
+    Ok(result.cnt.unwrap_or(0))
 }
 
 /// DAO function for updating a ticket by id.
 pub async fn update_ticket_by_id(
-    conn: &TiraDbConn,
-    ticket: UpdateTicket,
+    state: &TiraState,
+    ticket: &UpdateTicket,
     ticket_id: i64,
-) -> QueryResult<usize> {
-    conn.run(move |c| {
-        use crate::schema::tickets;
-
-        let subject = ticket.subject.map(|subject| tickets::subject.eq(subject));
-        let priority = ticket
-            .priority
-            .map(|priority| tickets::priority.eq(priority));
-        let status = ticket.status.map(|status| tickets::status.eq(status));
-
-        diesel::update(tickets::dsl::tickets.filter(tickets::id.eq(ticket_id)))
-            .set((
-                subject,
-                tickets::description.eq(ticket.description),
-                tickets::category_id.eq(ticket.category_id),
-                priority,
-                status,
-            ))
-            .execute(c)
-    })
-    .await
-}
-
-fn sort_by_column<U: 'static>(
-    query: BoxedQuery<'static, Pg>,
-    column: U,
-    order_by: String,
-) -> BoxedQuery<'static, Pg>
-where
-    U: ExpressionMethods + QueryFragment<Pg> + AppearsOnTable<crate::schema::tickets::table>,
-{
-    match order_by.as_str() {
-        "asc" => query.order_by(column.asc()),
-        "desc" => query.order_by(column.desc()),
-        _ => query.order_by(column.asc()),
+) -> Result<u64> {
+    let mut query = QueryBuilder::new("UPDATE TICKETS SET ");
+    if let Some(category_id) = ticket.category_id {
+        query.push("category_id = ");
+        query.push_bind(category_id);
     }
+    if let Some(subject) = ticket.subject.clone() {
+        query.push("subject = ");
+        query.push_bind(subject);
+    }
+    if let Some(description) = ticket.description.clone() {
+        query.push("description = ");
+        query.push_bind(description);
+    }
+    if let Some(status) = ticket.status.clone() {
+        query.push("status = ");
+        query.push_bind(status);
+    }
+    if let Some(priority) = ticket.priority.clone() {
+        query.push("priority = ");
+        query.push_bind(priority);
+    }
+    if let Some(assignee_ids) = ticket.assignee_ids.clone() {
+        query.push("assignee_ids = ");
+        query.push_bind(assignee_ids);
+    }
+
+    query.push(" WHERE id = ");
+    query.push_bind(ticket_id);
+
+    let result = query.build().execute(&state.pool).await?;
+
+    Ok(result.rows_affected())
 }

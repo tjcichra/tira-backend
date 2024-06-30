@@ -5,6 +5,6 @@ CREATE TABLE tickets (
     category_id BIGINT REFERENCES categories (id),
     priority TEXT NOT NULL,
     status TEXT NOT NULL,
-    created TIMESTAMP NOT NULL,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     reporter_id BIGINT REFERENCES users (id) NOT NULL
 );

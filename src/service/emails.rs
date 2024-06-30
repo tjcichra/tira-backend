@@ -5,6 +5,7 @@ use lettre::{
     message::SinglePart, transport::smtp::authentication::Credentials, Message, SmtpTransport,
     Transport,
 };
+use log::info;
 
 use crate::models::User;
 
@@ -101,7 +102,7 @@ pub fn handle_emails(rx: Receiver<Email>) {
                 send_email(email);
             }
             Err(e) => {
-                println!("Ending email queue: {}", e);
+                info!("Ending email queue: {}", e);
                 return;
             }
         }
@@ -143,7 +144,7 @@ pub fn send_email(e: Email) {
 
     // Send the email
     match mailer.send(&email) {
-        Ok(_) => println!("Email sent successfully!"),
+        Ok(_) => info!("Email sent successfully!"),
         Err(e) => panic!("Could not send email: {:?}", e),
     }
 }

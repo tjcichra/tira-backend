@@ -1,17 +1,12 @@
-use crate::{
-    controller::{self, TiraErrorResponse},
-    dao,
-    models::Assignment,
-    TiraDbConn,
-};
+use crate::{dao, models::Assignment, TiraState};
+use anyhow::Result;
 
 /// Service function for retrieving all assignments.
 pub async fn get_assignments(
-    conn: &TiraDbConn,
+    state: &TiraState,
     assignee_id: Option<i64>,
     ticket_id: Option<i64>,
-) -> Result<Vec<Assignment>, TiraErrorResponse> {
-    dao::assignments::get_assignments(conn, assignee_id, ticket_id)
-        .await
-        .map_err(controller::convert)
+) -> Result<Vec<Assignment>> {
+    let assignments = dao::assignments::get_assignments(state, assignee_id, ticket_id).await?;
+    Ok(assignments)
 }

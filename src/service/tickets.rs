@@ -1,80 +1,68 @@
 use crate::{
-    controller::{self, TiraErrorResponse},
     dao::{self, tickets},
     models::{
-        create::{CreateAssignmentWithUserId, CreateComment, CreateTicket},
-        patch::UpdateTicket,
-        Assignment, Comment, Ticket, TicketWithoutDescription,
+        patch::UpdateTicket, Assignment, Comment, CreateTicket, Ticket, TicketWithoutDescription,
     },
-    service, TiraDbConn,
+    service, TiraState,
 };
+use anyhow::anyhow;
+use anyhow::Result;
 use regex::Regex;
-use rocket::http::Status;
 
 /// Service function for creating an assignment by ticket id and assigner id.
 pub async fn create_assignment_by_ticket_id_and_assigner_id(
-    conn: &TiraDbConn,
-    assignee_id: CreateAssignmentWithUserId,
+    state: &TiraState,
+    assignee_id: i64,
     ticket_id: i64,
     assigner_id: i64,
-) -> Result<i64, TiraErrorResponse> {
+) -> Result<i64> {
     dao::tickets::create_assignment_by_ticket_id_and_assigner_id(
-        conn,
+        state,
         assignee_id,
         ticket_id,
         assigner_id,
     )
     .await
-    .map_err(controller::convert)
 }
 
 /// Service function for creating a comment by ticket id.
 pub async fn create_comment_by_ticket_id_and_commenter_id(
-    conn: &TiraDbConn,
-    comment: CreateComment,
+    state: &TiraState,
+    comment: &str,
     ticket_id: i64,
     commenter_id: i64,
-) -> Result<i64, TiraErrorResponse> {
+) -> Result<i64> {
     let regex = Regex::new(r"(</?[^>]+(>|$)|&nbsp;|\s)").unwrap();
-    let content_without_tags: String = regex.replace_all(&comment.content, "").into();
+    let content_without_tags: String = regex.replace_all(comment, "").into();
 
     if content_without_tags.is_empty() {
-        return Err(controller::create_error_response(
-            Status::BadRequest,
-            "Comment cannot be blank!".to_string(),
-        ));
+        return Err(anyhow!("Comment cannot be blank!"));
     }
 
     dao::tickets::create_comment_by_ticket_id_and_commenter_id(
-        conn,
+        state,
         comment,
         ticket_id,
         commenter_id,
     )
     .await
-    .map_err(controller::convert)
 }
 
 /// Service function for creating a ticket by reporter id.
 pub async fn create_ticket_by_reporter_id(
-    conn: &TiraDbConn,
-    ticket: CreateTicket,
+    state: &TiraState,
+    ticket: &CreateTicket,
     reporter_id: i64,
-) -> Result<i64, TiraErrorResponse> {
+) -> Result<i64> {
     if ticket.subject.is_empty() {
-        return Err(controller::create_error_response(
-            Status::BadRequest,
-            "Subject can not be empty".to_string(),
-        ));
+        return Err(anyhow!("Subject can not be empty"));
     }
 
     match ticket.status.as_str() {
         "Backlog" | "In Progress" | "Not Deployed Yet" | "Done" | "Closed" => (),
         _ => {
-            return Err(controller::create_error_response(
-                Status::BadRequest,
+            return Err(anyhow!(
                 "Status must be 'Backlog', 'In Progress', 'Not Deployed Yet', 'Done', or 'Closed'"
-                    .to_string(),
             ));
         }
     }
@@ -82,108 +70,83 @@ pub async fn create_ticket_by_reporter_id(
     match ticket.priority.as_str() {
         "Low" | "Medium" | "High" => (),
         _ => {
-            return Err(controller::create_error_response(
-                Status::BadRequest,
-                "Priority must be 'Low', 'Medium', or 'High'".to_string(),
-            ));
+            return Err(anyhow!("Priority must be 'Low', 'Medium', or 'High'"));
         }
     }
 
-    dao::tickets::create_ticket_by_reporter_id(conn, ticket, reporter_id)
-        .await
-        .map_err(controller::convert)
+    let id = dao::tickets::create_ticket_by_reporter_id(state, ticket, reporter_id).await?;
+    Ok(id)
 }
 
 /// Service function for retrieving assignments by ticket id.
 pub async fn get_assignments_by_ticket_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     ticket_id: i64,
-) -> Result<Vec<Assignment>, TiraErrorResponse> {
-    dao::tickets::get_assignments_by_ticket_id(conn, ticket_id)
-        .await
-        .map_err(controller::convert)
+) -> Result<Vec<Assignment>> {
+    let assignments = dao::tickets::get_assignments_by_ticket_id(state, ticket_id).await?;
+    Ok(assignments)
 }
 
 /// Service function for retrieving comments by ticket id.
-pub async fn get_comments_by_ticket_id(
-    conn: &TiraDbConn,
-    ticket_id: i64,
-) -> Result<Vec<Comment>, TiraErrorResponse> {
-    dao::tickets::get_comments_by_ticket_id(conn, ticket_id)
-        .await
-        .map_err(controller::convert)
+pub async fn get_comments_by_ticket_id(state: &TiraState, ticket_id: i64) -> Result<Vec<Comment>> {
+    let comments = dao::tickets::get_comments_by_ticket_id(state, ticket_id).await?;
+    Ok(comments)
 }
 
 /// Service function for retrieving a ticket by id.
-pub async fn get_ticket_by_id(
-    conn: &TiraDbConn,
-    ticket_id: i64,
-) -> Result<Ticket, TiraErrorResponse> {
-    dao::tickets::get_ticket_by_id(conn, ticket_id)
-        .await
-        .map_err(controller::convert)
+pub async fn get_ticket_by_id(state: &TiraState, ticket_id: i64) -> Result<Ticket> {
+    let ticket = dao::tickets::get_ticket_by_id(state, ticket_id).await?;
+    Ok(ticket)
 }
 
 /// Service function for retrieving tickets by ids.
-pub async fn get_tickets_by_ids(
-    conn: &TiraDbConn,
-    ticket_ids: Vec<i64>,
-) -> Result<Vec<Ticket>, TiraErrorResponse> {
-    dao::tickets::get_tickets_by_ids(conn, ticket_ids)
-        .await
-        .map_err(controller::convert)
+pub async fn get_tickets_by_ids(state: &TiraState, ticket_ids: Vec<i64>) -> Result<Vec<Ticket>> {
+    let tickets = dao::tickets::get_tickets_by_ids(state, ticket_ids).await?;
+    Ok(tickets)
 }
 
 /// Service function for retrieving all tickets.
 pub async fn get_tickets(
-    conn: &TiraDbConn,
-    limit: Option<i64>,
-    offset: Option<i64>,
-    filter_reporter_id: Option<i64>,
-    filter_open: Option<bool>,
-    sort_by: Option<String>,
-    order_by: Option<String>,
-) -> Result<(Vec<TicketWithoutDescription>, i64), TiraErrorResponse> {
+    state: &TiraState,
+    // limit: Option<i64>,
+    // offset: Option<i64>,
+    // filter_reporter_id: Option<i64>,
+    // filter_open: Option<bool>,
+    // sort_by: Option<String>,
+    // order_by: Option<String>,
+) -> Result<(Vec<TicketWithoutDescription>, i64)> {
     let tickets = dao::tickets::get_tickets(
-        conn,
-        limit,
-        offset,
-        filter_reporter_id,
-        filter_open,
-        sort_by,
-        order_by,
+        state,
+        // limit,
+        // offset,
+        // filter_reporter_id,
+        // filter_open,
+        // sort_by,
+        // order_by,
     )
-    .await
-    .map_err(controller::convert)?;
+    .await?;
 
-    let total_count = dao::tickets::get_total_ticket_count(conn)
-        .await
-        .map_err(controller::convert)?;
-
+    let total_count = dao::tickets::get_total_ticket_count(state).await?;
     Ok((tickets, total_count))
 }
 
 /// Service function for updating a ticket by id.
 pub async fn update_ticket_by_id(
-    conn: &TiraDbConn,
-    ticket: UpdateTicket,
+    state: &TiraState,
+    ticket: &UpdateTicket,
     ticket_id: i64,
-) -> Result<(), TiraErrorResponse> {
-    let tickets_updated = tickets::update_ticket_by_id(conn, ticket, ticket_id)
-        .await
-        .map_err(controller::convert)?;
+) -> Result<()> {
+    let tickets_updated = tickets::update_ticket_by_id(state, ticket, ticket_id).await?;
     service::check_only_one_row_changed(tickets_updated)
 }
 
 /// Service function for updating assignments by ticket id.
 pub async fn update_assignments_by_ticket_id(
-    conn: &TiraDbConn,
+    state: &TiraState,
     ticket_id: i64,
     assignee_ids: Vec<i64>,
     assigner_id: i64,
-) -> Result<(), TiraErrorResponse> {
-    dao::assignments::update_assignments_by_ticket_id(conn, ticket_id, assignee_ids, assigner_id)
+) -> Result<()> {
+    dao::assignments::update_assignments_by_ticket_id(state, ticket_id, assignee_ids, assigner_id)
         .await
-        .map_err(controller::convert)?;
-    Ok(())
 }
