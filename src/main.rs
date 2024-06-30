@@ -11,7 +11,6 @@ use clap::Parser;
 use dotenv::dotenv;
 use log::info;
 use std::sync::mpsc;
-use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::task;
 use tower_http::cors::Any;
@@ -19,6 +18,7 @@ use tower_http::cors::CorsLayer;
 mod controller;
 mod dao;
 mod models;
+use std::process;
 mod service;
 use anyhow::Result;
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -43,35 +43,43 @@ pub struct Args {
 async fn main() -> Result<()> {
     simple_logger::init_with_level(log::Level::Info)?;
 
+    ctrlc::set_handler(move || {
+        info!("Got signal. Shutting down...");
+        process::exit(0);
+    })?;
+
     // Import environment variables from .env file
+    info!("reading env");
     dotenv().ok();
 
     let args = Args::parse();
 
+    info!("setting up email handler");
     let (email_tx, email_rx) = mpsc::sync_channel(512);
     // Listen for emails on the email queue
     task::spawn(async move {
         handle_emails(email_rx);
     });
 
+    info!("connecting to the database");
     let state = TiraState {
         email_tx,
-        pool: PgPoolOptions::new()
-            .acquire_timeout(Duration::from_secs(5))
-            .connect(&args.database_url)
-            .await?,
+        pool: PgPoolOptions::new().connect(&args.database_url).await?,
     };
+    info!("successfully to the database");
 
     let cors = CorsLayer::new()
         .allow_methods(Any)
         .allow_origin(Any)
         .allow_headers(Any);
 
+    info!("setting up public routes");
     let no_auth_routes = Router::new()
         .route("/login", post(controller::sessions::login_endpoint))
         .layer(cors.clone())
         .with_state(state.clone());
 
+    info!("setting up private routes");
     let auth_routes = Router::new()
         .route(
             "/assignments",
@@ -164,6 +172,7 @@ async fn main() -> Result<()> {
         ))
         .with_state(state);
 
+    info!("setting up router");
     let app = no_auth_routes.merge(auth_routes);
 
     let bind = format!("0.0.0.0:{}", args.port);
