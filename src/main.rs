@@ -1,7 +1,14 @@
 use crate::controller::authentication;
 use crate::service::emails::handle_emails;
 use crate::service::emails::Email;
+use axum::body::Body;
+use axum::body::Bytes;
+use axum::extract::Request;
+use axum::http::StatusCode;
 use axum::middleware;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use axum::response::Response;
 use axum::routing::delete;
 use axum::routing::get;
 use axum::routing::patch;
@@ -9,6 +16,7 @@ use axum::routing::post;
 use axum::Router;
 use clap::Parser;
 use dotenv::dotenv;
+use http_body_util::BodyExt;
 use log::info;
 use std::sync::mpsc;
 use std::thread;
@@ -78,6 +86,7 @@ async fn main() -> Result<()> {
         .route("/login", post(controller::sessions::login_endpoint))
         .route("/health", get(controller::health))
         .layer(cors.clone())
+        .layer(middleware::from_fn(print_request_body))
         .with_state(state.clone());
 
     info!("setting up private routes");
@@ -149,6 +158,7 @@ async fn main() -> Result<()> {
             get(controller::users::get_current_user_endpoint),
         )
         .layer(cors)
+        .layer(middleware::from_fn(print_request_body))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             authentication,
@@ -165,4 +175,36 @@ async fn main() -> Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+// middleware that shows how to consume the request body upfront
+async fn print_request_body(request: Request, next: Next) -> Result<impl IntoResponse, Response> {
+    info!("Request: {:?}", request);
+    let request = buffer_request_body(request).await?;
+    Ok(next.run(request).await)
+}
+
+// the trick is to take the request apart, buffer the body, do what you need to do, then put
+// the request back together
+async fn buffer_request_body(request: Request) -> Result<Request, Response> {
+    let uri = request.uri().to_string();
+    let (parts, body) = request.into_parts();
+
+    // this wont work if the body is an long running stream
+    let bytes = body
+        .collect()
+        .await
+        .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response())?
+        .to_bytes();
+
+    do_thing_with_request_body(&uri, bytes.clone());
+
+    Ok(Request::from_parts(parts, Body::from(bytes)))
+}
+
+fn do_thing_with_request_body(uri: &str, bytes: Bytes) {
+    let body = String::from_utf8_lossy(&bytes);
+    if !body.is_empty() {
+        info!("body for {}: {}", uri, String::from_utf8_lossy(&bytes));
+    }
 }

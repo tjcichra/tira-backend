@@ -16,6 +16,7 @@ clap = { version = "4.5.9", features = ["env", "derive"] }
 cookie = "0.18.1"
 ctrlc = { version = "3.4.4", features = ["termination"] }
 dotenv = "0.15.0"
+http-body-util = "0.1.2"
 lettre = "0.11.6"
 log = "0.4.21"
 openssl = { version = "0.10.64", features = ["vendored"] }

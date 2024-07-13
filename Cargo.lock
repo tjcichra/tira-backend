@@ -2798,6 +2798,7 @@ dependencies = [
  "cookie",
  "ctrlc",
  "dotenv",
+ "http-body-util",
  "lettre",
  "log",
  "openssl",
