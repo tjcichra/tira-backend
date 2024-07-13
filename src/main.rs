@@ -13,7 +13,6 @@ use log::info;
 use std::sync::mpsc;
 use std::thread;
 use tokio::net::TcpListener;
-use tokio::task;
 use tower_http::cors::Any;
 use tower_http::cors::CorsLayer;
 mod controller;
@@ -89,15 +88,9 @@ async fn main() -> Result<()> {
         )
         .route(
             "/categories",
-            delete(controller::categories::archive_category_by_id_endpoint),
-        )
-        .route(
-            "/categories",
-            post(controller::categories::create_category_endpoint),
-        )
-        .route(
-            "/categories",
-            get(controller::categories::get_categories_endpoint),
+            delete(controller::categories::archive_category_by_id_endpoint)
+                .post(controller::categories::create_category_endpoint)
+                .get(controller::categories::get_categories_endpoint),
         )
         .route(
             "/categories/:category_id",
@@ -109,11 +102,8 @@ async fn main() -> Result<()> {
         )
         .route(
             "/images/:file_name",
-            post(controller::images::upload_image_endpoint),
-        )
-        .route(
-            "/images/:file_name",
-            get(controller::images::retrieve_image_endpoint),
+            post(controller::images::upload_image_endpoint)
+                .get(controller::images::retrieve_image_endpoint),
         )
         .route("/logout", post(controller::sessions::logout_endpoint))
         .route(
@@ -122,34 +112,34 @@ async fn main() -> Result<()> {
         )
         .route(
             "/tickets/:ticket_id/comments",
-            post(controller::tickets::create_comment_by_ticket_id_endpoint),
+            post(controller::tickets::create_comment_by_ticket_id_endpoint)
+                .get(controller::tickets::get_comments_by_ticket_id_endpoint),
         )
         .route(
             "/tickets",
-            post(controller::tickets::create_ticket_endpoint),
+            post(controller::tickets::create_ticket_endpoint)
+                .get(controller::tickets::get_tickets_endpoint),
         )
         .route(
             "/tickets/:ticket_id/assignments",
             get(controller::tickets::get_assignments_by_ticket_id_endpoint),
         )
         .route(
-            "/tickets/:ticket_id/comments",
-            get(controller::tickets::get_comments_by_ticket_id_endpoint),
-        )
-        .route(
             "/tickets/:ticket_id",
-            get(controller::tickets::get_ticket_by_id_endpoint),
-        )
-        .route("/tickets", get(controller::tickets::get_tickets_endpoint))
-        .route(
-            "/tickets/:ticket_id",
-            patch(controller::tickets::patch_ticket_by_id_endpoint),
+            get(controller::tickets::get_ticket_by_id_endpoint)
+                .patch(controller::tickets::patch_ticket_by_id_endpoint),
         )
         .route(
             "/users/:user_id",
-            delete(controller::users::archive_user_by_id_endpoint),
+            delete(controller::users::archive_user_by_id_endpoint)
+                .get(controller::users::get_user_by_id_endpoint)
+                .patch(controller::users::patch_user_by_id_endpoint),
         )
-        .route("/users", post(controller::users::create_user_endpoint))
+        .route(
+            "/users",
+            post(controller::users::create_user_endpoint)
+                .get(controller::users::get_users_endpoint),
+        )
         .route(
             "/users/:user_id/assignments",
             get(controller::users::get_assignments_by_user_id_endpoint),
@@ -157,15 +147,6 @@ async fn main() -> Result<()> {
         .route(
             "/users/current",
             get(controller::users::get_current_user_endpoint),
-        )
-        .route(
-            "/users/:user_id",
-            get(controller::users::get_user_by_id_endpoint),
-        )
-        .route("/users", get(controller::users::get_users_endpoint))
-        .route(
-            "/users/:user_id",
-            patch(controller::users::patch_user_by_id_endpoint),
         )
         .layer(cors)
         .layer(middleware::from_fn_with_state(
