@@ -52,12 +52,8 @@ pub async fn get_categories(
 
 /// DAO function for retrieving a category by user id.
 pub async fn get_category_by_id(state: &TiraState, user_id: i64) -> Result<Category> {
-    let categories = sqlx::query_as!(
-        Category,
-        "SELECT *  FROM categories WHERE creator_id = $1",
-        user_id
-    )
-    .fetch_one(&state.pool)
-    .await?;
+    let categories = sqlx::query_as!(Category, "SELECT * FROM categories WHERE id = $1", user_id)
+        .fetch_one(&state.pool)
+        .await?;
     Ok(categories)
 }

@@ -139,18 +139,13 @@ pub async fn get_tickets(
 ) -> Result<Vec<TicketWithoutDescription>> {
     // TODO use query builder - right now ignore all the filter options
 
-    let tickets = sqlx::query_as!(TicketWithoutDescription, "SELECT * FROM tickets")
-        .fetch_all(&state.pool)
-        .await?;
+    let tickets = sqlx::query_as!(
+        TicketWithoutDescription,
+        "SELECT id, subject, category_id, priority, status, created, reporter_id FROM tickets"
+    )
+    .fetch_all(&state.pool)
+    .await?;
     Ok(tickets)
-}
-
-/// DAO function for retrieving the total ticket count.
-pub async fn get_total_ticket_count(state: &TiraState) -> Result<i64> {
-    let result = sqlx::query_as!(Count, "SELECT count(*) cnt FROM tickets")
-        .fetch_one(&state.pool)
-        .await?;
-    Ok(result.cnt.unwrap_or(0))
 }
 
 /// DAO function for updating a ticket by id.

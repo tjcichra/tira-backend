@@ -289,7 +289,7 @@ pub async fn get_tickets_endpoint(
     State(state): State<TiraState>,
     // Query(query): Query<GetTicketsQueryParams>,
 ) -> Result<Response, TiraError> {
-    let (tickets, total_count) = tickets::get_tickets(
+    let tickets = tickets::get_tickets(
         &state,
         // query.limit,
         // query.offset,
@@ -299,6 +299,7 @@ pub async fn get_tickets_endpoint(
         // query.order_by,
     )
     .await?;
+    let ticket_count = tickets.len();
     let mut tickets_response = Vec::new();
 
     for ticket in tickets {
@@ -337,7 +338,7 @@ pub async fn get_tickets_endpoint(
 
     let response = CountResponse {
         data: tickets_response,
-        total_count,
+        total_count: ticket_count as i64,
     };
 
     Ok(Json(response).into_response())

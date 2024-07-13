@@ -114,7 +114,7 @@ pub async fn get_tickets(
     // filter_open: Option<bool>,
     // sort_by: Option<String>,
     // order_by: Option<String>,
-) -> Result<(Vec<TicketWithoutDescription>, i64)> {
+) -> Result<Vec<TicketWithoutDescription>> {
     let tickets = dao::tickets::get_tickets(
         state,
         // limit,
@@ -126,8 +126,7 @@ pub async fn get_tickets(
     )
     .await?;
 
-    let total_count = dao::tickets::get_total_ticket_count(state).await?;
-    Ok((tickets, total_count))
+    Ok(tickets)
 }
 
 /// Service function for updating a ticket by id.

@@ -30,8 +30,8 @@ pub async fn get_categories(
     Ok(categories)
 }
 
-/// Service function for retrieving a category by user id.
-pub async fn get_category_by_id(state: &TiraState, user_id: i64) -> Result<Category> {
-    let category = dao::categories::get_category_by_id(state, user_id).await?;
+/// Service function for retrieving a category by category id.
+pub async fn get_category_by_id(state: &TiraState, category_id: i64) -> Result<Category> {
+    let category = dao::categories::get_category_by_id(state, category_id).await?;
     Ok(category)
 }

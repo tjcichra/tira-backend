@@ -62,7 +62,7 @@ pub async fn authentication(
 
             let session = sqlx::query_as!(
                 Session,
-                "SELECT * FROM sessions WHERE uuid = $1 and expiration >= now()",
+                "SELECT * FROM sessions WHERE uuid = $1 and (expiration >= now() or expiration is null)",
                 session_uuid,
             )
             .fetch_one(&state.pool)

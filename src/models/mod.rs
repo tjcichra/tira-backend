@@ -76,8 +76,6 @@ pub struct TicketWithReporterAsUser {
 pub struct TicketWithoutDescription {
     pub id: i64,
     pub subject: String,
-    #[serde(skip_serializing)]
-    pub description: Option<String>,
     pub category_id: Option<i64>,
     pub priority: String,
     pub status: String,
