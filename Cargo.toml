@@ -14,7 +14,7 @@ axum-extra = { version = "0.9.3", features = ["cookie"] }
 chrono = { version = "0.4.37", features = ["serde"] }
 clap = { version = "4.5.15", features = ["env", "derive"] }
 cookie = "0.18.1"
-ctrlc = { version = "3.4.4", features = ["termination"] }
+ctrlc = { version = "3.4.5", features = ["termination"] }
 dotenv = "0.15.0"
 http-body-util = "0.1.2"
 lettre = "0.11.6"
