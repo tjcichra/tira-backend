@@ -27,6 +27,6 @@ serde_json = "1.0.125"
 simple_logger = "5.0.0"
 sqlx = { version = "0.8.0", features = [ "runtime-tokio", "postgres", "chrono", "tls-rustls" ] }
 time = "0.3.36"
-tokio = { version = "1.39.2", features = ["full"] }
+tokio = { version = "1.39.3", features = ["full"] }
 tower-http = { version = "0.5.2", features = ["cors"] }
 uuid = { version = "1.10.0", features = ["v4"] }
