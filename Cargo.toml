@@ -10,7 +10,7 @@ anyhow = "1.0.89"
 aws-config = "0.15.0"
 aws-sdk-s3 = "0.15.0"
 axum = { version = "0.7.6", features = ["multipart"] }
-axum-extra = { version = "0.9.3", features = ["cookie"] }
+axum-extra = { version = "0.9.4", features = ["cookie"] }
 chrono = { version = "0.4.37", features = ["serde"] }
 clap = { version = "4.5.18", features = ["env", "derive"] }
 cookie = "0.18.1"
