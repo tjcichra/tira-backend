@@ -294,7 +294,7 @@ dependencies = [
  "percent-encoding",
  "regex",
  "ring 0.16.20",
- "time 0.3.36",
+ "time 0.3.37",
  "tracing",
 ]
 
@@ -409,7 +409,7 @@ dependencies = [
  "itoa",
  "num-integer",
  "ryu",
- "time 0.3.36",
+ "time 0.3.37",
 ]
 
 [[package]]
@@ -726,7 +726,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ddef33a339a91ea89fb53151bd0a4689cfce27055c291dfa69945475d22c747"
 dependencies = [
  "percent-encoding",
- "time 0.3.36",
+ "time 0.3.37",
  "version_check",
 ]
 
@@ -2514,7 +2514,7 @@ checksum = "e8c5dfa5e08767553704aa0ffd9d9794d527103c736aba9854773851fd7497eb"
 dependencies = [
  "colored",
  "log",
- "time 0.3.36",
+ "time 0.3.37",
  "windows-sys 0.48.0",
 ]
 
@@ -2903,9 +2903,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.36"
+version = "0.3.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dfd88e563464686c916c7e46e623e520ddc6d79fa6641390f2e3fa86e83e885"
+checksum = "35e7868883861bd0e56d9ac6efcaaca0d6d5d82a2a7ec8209ff492c07cf37b21"
 dependencies = [
  "deranged",
  "itoa",
@@ -2926,9 +2926,9 @@ checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "time-macros"
-version = "0.2.18"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf"
+checksum = "2834e6017e3e5e4b9834939793b282bc03b37a3336245fa820e35e233e2a85de"
 dependencies = [
  "num-conv",
  "time-core",
@@ -2983,7 +2983,7 @@ dependencies = [
  "serde_json",
  "simple_logger",
  "sqlx",
- "time 0.3.36",
+ "time 0.3.37",
  "tokio",
  "tower-http",
  "uuid",
