@@ -12,7 +12,7 @@ aws-sdk-s3 = "0.15.0"
 axum = { version = "0.8.1", features = ["multipart"] }
 axum-extra = { version = "0.10.0", features = ["cookie"] }
 chrono = { version = "0.4.39", features = ["serde"] }
-clap = { version = "4.5.23", features = ["env", "derive"] }
+clap = { version = "4.5.24", features = ["env", "derive"] }
 cookie = "0.18.1"
 ctrlc = { version = "3.4.5", features = ["termination"] }
 dotenv = "0.15.0"
