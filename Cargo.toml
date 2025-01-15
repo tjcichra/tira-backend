@@ -18,7 +18,7 @@ ctrlc = { version = "3.4.5", features = ["termination"] }
 dotenv = "0.15.0"
 http-body-util = "0.1.2"
 lettre = "0.11.11"
-log = "0.4.21"
+log = "0.4.25"
 openssl = { version = "0.10.68", features = ["vendored"] }
 regex = "1.11.1"
 rust-crypto = "0.2.36"
