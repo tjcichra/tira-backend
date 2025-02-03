@@ -17,7 +17,7 @@ cookie = "0.18.1"
 ctrlc = { version = "3.4.5", features = ["termination"] }
 dotenv = "0.15.0"
 http-body-util = "0.1.2"
-lettre = "0.11.11"
+lettre = "0.11.12"
 log = "0.4.25"
 openssl = { version = "0.10.69", features = ["vendored"] }
 regex = "1.11.1"
